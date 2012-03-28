@@ -1,8 +1,22 @@
-<?PHP 
+<?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * Library (public API) of the scheduler module
- * 
+ *
  * @package    mod
  * @subpackage scheduler
  * @copyright  2011 Henning Bostelmann and others (see README.txt)
@@ -11,14 +25,14 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-/// Library of functions and constants for module scheduler
-include_once $CFG->dirroot.'/mod/scheduler/locallib.php';
-include_once $CFG->dirroot.'/mod/scheduler/mailtemplatelib.php';
+// Library of functions and constants for module scheduler
+require_once($CFG->dirroot.'/mod/scheduler/locallib.php');
+require_once($CFG->dirroot.'/mod/scheduler/mailtemplatelib.php');
 
 define('SCHEDULER_TIMEUNKNOWN', 0);  // This is used for appointments for which no time is entered
-define('SCHEDULER_SELF', 0); // Used for setting conflict search scope 
-define('SCHEDULER_OTHERS', 1); // Used for setting conflict search scope 
-define('SCHEDULER_ALL', 2); // Used for setting conflict search scope 
+define('SCHEDULER_SELF', 0); // Used for setting conflict search scope
+define('SCHEDULER_OTHERS', 1); // Used for setting conflict search scope
+define('SCHEDULER_ALL', 2); // Used for setting conflict search scope
 
 define ('MEAN_GRADE', 0); // Used for grading strategy
 define ('MAX_GRADE', 1); // Used for grading strategy
@@ -33,14 +47,13 @@ define ('MAX_GRADE', 1); // Used for grading strategy
  */
 function scheduler_add_instance($scheduler) {
     global $DB;
-    
+
     $scheduler->timemodified = time();
     $id = $DB->insert_record('scheduler', $scheduler);
     $scheduler->id = $id;
-    
+
     scheduler_grade_item_update($scheduler);
-    
-    
+
     return $id;
 }
 
@@ -54,15 +67,15 @@ function scheduler_add_instance($scheduler) {
  */
 function scheduler_update_instance($scheduler) {
     global $DB;
-    
+
     $scheduler->timemodified = time();
     $scheduler->id = $scheduler->instance;
-    
+
     $DB->update_record('scheduler', $scheduler);
-    
+
     // update grade item and grades
     scheduler_update_grades($scheduler);
-    
+
     return true;
 }
 
@@ -77,23 +90,23 @@ function scheduler_update_instance($scheduler) {
  */
 function scheduler_delete_instance($id) {
     global $CFG, $DB;
-    
+
     if (! $scheduler = $DB->get_record('scheduler', array('id' => $id))) {
         return false;
     }
-    
+
     $result = $DB->delete_records('scheduler', array('id' => $scheduler->id));
-    
+
     $oldslots = $DB->get_records('scheduler_slots', array('schedulerid' => $scheduler->id), '', 'id, id');
-    if ($oldslots){
-        foreach(array_keys($oldslots) as $slotid){
+    if ($oldslots) {
+        foreach (array_keys($oldslots) as $slotid) {
             // will delete appointments and remaining related events
             scheduler_delete_slot($slotid);
         }
     }
-    
+
     scheduler_grade_item_delete($scheduler);
-    
+
     return $result;
 }
 
@@ -109,8 +122,8 @@ function scheduler_delete_instance($id) {
  * @param object $scheduler the activity module behind the course module instance
  * @return object an information object as defined above
  */
-function scheduler_user_outline($course, $user, $mod, $scheduler) {
-    $return = NULL;
+function scheduler_user_outline ($course, $user, $mod, $scheduler) {
+    $return = null;
     return $return;
 }
 
@@ -124,7 +137,7 @@ function scheduler_user_outline($course, $user, $mod, $scheduler) {
  * @param boolean true if the user completed activity, false otherwise
  */
 function scheduler_user_complete($course, $user, $mod, $scheduler) {
-    
+
     return true;
 }
 
@@ -138,7 +151,7 @@ function scheduler_user_complete($course, $user, $mod, $scheduler) {
  * @return boolean true if anything was printed, otherwise false
  */
 function scheduler_print_recent_activity($course, $isteacher, $timestart) {
-    
+
     return false;
 }
 
@@ -152,29 +165,29 @@ function scheduler_print_recent_activity($course, $isteacher, $timestart) {
  */
 function scheduler_cron () {
     global $CFG, $DB;
-    
+
     $date = make_timestamp(date('Y'), date('m'), date('d'), date('H'), date('i'));
-    
+
     // for every appointment in all schedulers
     $select = 'emaildate > 0 AND emaildate <= ? AND starttime > ?';
     $slots = $DB->get_records_select('scheduler_slots', $select, array($date, $date), 'starttime');
-    
+
     foreach ($slots as $slot) {
         // get teacher
         $teacher = $DB->get_record('user', array('id' => $slot->teacherid));
-        
+
         // get course
         $scheduler = $DB->get_record('scheduler', array('id'=>$slot->schedulerid));
         $course = $DB->get_record('course', array('id'=>$scheduler->course));
-        
+
         // get appointed student list
         $appointments = $DB->get_records('scheduler_appointment', array('slotid'=>$slot->id), '', 'id, studentid');
-        
+
         //if no email previously sent and one is required
         foreach ($appointments as $appointment) {
             $student = $DB->get_record('user', array('id'=>$appointment->studentid));
             $vars = scheduler_get_mail_variables ($scheduler, $slot, $teacher, $student);
-            send_email_from_template ($student, $teacher, $course, 'remindtitle', 'reminder', $vars, 'scheduler');                
+            send_email_from_template ($student, $teacher, $course, 'remindtitle', 'reminder', $vars, 'scheduler');
         }
         // mark as sent
         $slot->emaildate = -1;
@@ -182,8 +195,6 @@ function scheduler_cron () {
     }
     return true;
 }
-
-
 
 /**
  * Returns the users with data in one scheduler
@@ -194,7 +205,7 @@ function scheduler_cron () {
  */
 function scheduler_get_participants($schedulerid) {
     global $CFG, $DB;
-    
+
     //Get students using slots they have
     $sql = '
         SELECT DISTINCT
@@ -209,7 +220,7 @@ function scheduler_get_participants($schedulerid) {
         u.id = a.studentid
         ';
     $students = $DB->get_records_sql($sql, array($schedulerid));
-    
+
     //Get teachers using slots they have
     $sql = '
         SELECT DISTINCT
@@ -222,20 +233,17 @@ function scheduler_get_participants($schedulerid) {
         u.id = s.teacherid
         ';
     $teachers = $DB->get_records_sql($sql, array($schedulerid));
-    
-    if ($students and $teachers){
+
+    if ($students and $teachers) {
         $participants = array_merge(array_values($students), array_values($teachers));
-    }
-    elseif ($students) {
+    } else if ($students) {
         $participants = array_values($students);
-    }
-    elseif ($teachers){
+    } else if ($teachers) {
         $participants = array_values($teachers);
-    }
-    else{
+    } else {
         $participants = array();
     }
-    
+
     //Return students array (it contains an array of unique users)
     return ($participants);
 }
@@ -252,16 +260,16 @@ function scheduler_get_participants($schedulerid) {
  **/
 function scheduler_scale_used($cmid, $scaleid) {
     global $DB;
-    
+
     $return = false;
-    
+
     // note : scales are assigned using negative index in the grade field of the appointment (see mod/assignement/lib.php)
     $rec = $DB->get_record('scheduler', array('id' => $cmid, 'scale' => -$scaleid));
-    
+
     if (!empty($rec) && !empty($scaleid)) {
         $return = true;
     }
-    
+
     return $return;
 }
 
@@ -278,11 +286,11 @@ function scheduler_scale_used($cmid, $scaleid) {
  */
 function scheduler_reset_course_form_definition(&$mform) {
     global $COURSE, $DB;
-    
+
     $mform->addElement('header', 'schedulerheader', get_string('modulenameplural', 'scheduler'));
-    
-    if($DB->record_exists('scheduler', array('course'=>$COURSE->id))){
-        
+
+    if ($DB->record_exists('scheduler', array('course'=>$COURSE->id))) {
+
         $mform->addElement('checkbox', 'reset_scheduler_slots', get_string('resetslots', 'scheduler'));
         $mform->addElement('checkbox', 'reset_scheduler_appointments', get_string('resetappointments', 'scheduler'));
         $mform->disabledIf('reset_scheduler_appointments', 'reset_scheduler_slots', 'checked');
@@ -306,43 +314,42 @@ function scheduler_reset_course_form_defaults($course) {
  */
 function scheduler_reset_userdata($data) {
     global $CFG, $DB;
-    
+
     $status = array();
     $componentstr = get_string('modulenameplural', 'scheduler');
-    
+
     $sqlfromslots = 'FROM {scheduler_slots} WHERE schedulerid IN '.
         '(SELECT sc.id FROM {scheduler} sc '.
         ' WHERE sc.course = :course)';
-    
+
     $params = array('course'=>$data->courseid);
-    
+
     $strreset = get_string('reset');
-    
-    
+
     if (!empty($data->reset_scheduler_appointments) || !empty($data->reset_scheduler_slots)) {
-        
+
         $slots = $DB->get_recordset_sql('SELECT * '.$sqlfromslots, $params);
         $success = true;
         foreach ($slots as $slot) {
             // delete calendar events
             $success = $success && scheduler_delete_calendar_events($slot);
-            
+
             // delete appointments
-            $success = $success && $DB->delete_records('scheduler_appointment', array('slotid'=>$slot->id));			    		    	
+            $success = $success && $DB->delete_records('scheduler_appointment', array('slotid'=>$slot->id));
         }
         $slots->close();
-        
+
         // reset gradebook
         $schedulers = $DB->get_records('scheduler', $params);
-        foreach ($schedulers as $scheduler){
+        foreach ($schedulers as $scheduler) {
             scheduler_grade_item_update($scheduler, 'reset');
         }
-        
-        $status[] = array('component' => $componentstr, 'item' => get_string('resetappointments','scheduler'), 'error' => !$success);
+
+        $status[] = array('component' => $componentstr, 'item' => get_string('resetappointments', 'scheduler'), 'error' => !$success);
     }
     if (!empty($data->reset_scheduler_slots)) {
         if ($DB->execute('DELETE '.$sqlfromslots, $params)) {
-            $status[] = array('component' => $componentstr, 'item' => get_string('resetslots','scheduler'), 'error' => false);
+            $status[] = array('component' => $componentstr, 'item' => get_string('resetslots', 'scheduler'), 'error' => false);
         }
     }
     return $status;
@@ -362,7 +369,7 @@ function scheduler_supports($feature) {
         case FEATURE_GRADE_HAS_GRADE:         return true;
         case FEATURE_GRADE_OUTCOMES:          return false;
         case FEATURE_BACKUP_MOODLE2:          return true;
-        
+
         default: return null;
     }
 }
@@ -373,7 +380,7 @@ function scheduler_supports($feature) {
  * add xxx_grade_item_update() function into mod/xxx/lib.php
  * patch xxx_update_instance(), xxx_add_instance() and xxx_delete_instance() to call xxx_grade_item_update()
  * patch all places of code that change grade values to call xxx_update_grades()
- * patch code that displays grades to students to use final grades from the gradebook 
+ * patch code that displays grades to students to use final grades from the gradebook
  */
 
 /**
@@ -385,67 +392,65 @@ function scheduler_supports($feature) {
 function scheduler_update_grades($scheduler, $userid=0, $nullifnone=true) {
     global $CFG, $DB;
     require_once($CFG->libdir.'/gradelib.php');
-    
+
     if ($scheduler->scale == 0) {
         scheduler_grade_item_update($scheduler);
-        
+
     } else if ($grades = scheduler_get_user_grades($scheduler, $userid)) {
-        foreach($grades as $k=>$v) {
+        foreach ($grades as $k => $v) {
             if ($v->rawgrade == -1) {
                 $grades[$k]->rawgrade = null;
             }
         }
         scheduler_grade_item_update($scheduler, $grades);
-        
+
     } else {
         scheduler_grade_item_update($scheduler);
     }
 }
 
-
 /**
  * Create grade item for given scheduler
  *
- * @param object $scheduler object 
+ * @param object $scheduler object
  * @param mixed optional array/object of grade(s); 'reset' means reset grades in gradebook
  * @return int 0 if ok, error code otherwise
  */
-function scheduler_grade_item_update($scheduler, $grades=NULL) {
+function scheduler_grade_item_update($scheduler, $grades=null) {
     global $CFG, $DB;
     require_once($CFG->libdir.'/gradelib.php');
-    
+
     if (!isset($scheduler->courseid)) {
         $scheduler->courseid = $scheduler->course;
     }
     $moduleid = $DB->get_field('modules', 'id', array('name'=>'scheduler'));
-    $cmid = $DB->get_field('course_modules', 'id', array('module'=>$moduleid, 'instance'=>$scheduler->id));
-    
+    $cmid = $DB->get_field('course_modules', 'id', array('module' => $moduleid, 'instance' => $scheduler->id));
+
     if ($scheduler->scale == 0) {
         // delete any grade item
         scheduler_grade_item_delete($scheduler);
-        return 0;	
-    }
-    else {
-        $params = array('itemname'=>$scheduler->name, 'idnumber'=>$cmid);
-        
+        return 0;
+    } else {
+        $params = array('itemname' => $scheduler->name, 'idnumber' => $cmid);
+
         if ($scheduler->scale > 0) {
             $params['gradetype'] = GRADE_TYPE_VALUE;
             $params['grademax']  = $scheduler->scale;
             $params['grademin']  = 0;
-            
+
         } else if ($scheduler->scale < 0) {
             $params['gradetype'] = GRADE_TYPE_SCALE;
             $params['scaleid']   = -$scheduler->scale;
-            
+
         } else {
             $params['gradetype'] = GRADE_TYPE_TEXT; // allow text comments only
         }
-        
+
         if ($grades  === 'reset') {
             $params['reset'] = true;
-            $grades = NULL;
+            $grades = null;
         }
-        
+
         return grade_update('mod/scheduler', $scheduler->courseid, 'mod', 'scheduler', $scheduler->id, 0, $grades, $params);
     }
 }
@@ -460,11 +465,11 @@ function scheduler_grade_item_update($scheduler, $grades=NULL) {
  */
 function scheduler_get_user_grades($scheduler, $userid=0) {
     global $CFG, $DB;
-    
+
     if ($scheduler->scale == 0) {
         return false;
     }
-    
+
     $usersql = '';
     $params = array();
     if ($userid) {
@@ -472,64 +477,64 @@ function scheduler_get_user_grades($scheduler, $userid=0) {
         $params['userid'] = $userid;
     }
     $params['sid'] = $scheduler->id;
-    
+
     $sql = 'SELECT a.id, a.studentid, a.grade '.
         'FROM {scheduler_slots} s JOIN {scheduler_appointment} a ON s.id = a.slotid '.
         'WHERE s.schedulerid = :sid AND a.grade IS NOT NULL'.$usersql;
-    
+
     $grades = $DB->get_records_sql($sql, $params);
     $finalgrades = array();
     $gradesums = array();
-    
+
     foreach ($grades as $grade) {
         $gradesums[$grade->studentid] = new stdClass();
         $finalgrades[$grade->studentid] = new stdClass();
         $finalgrades[$grade->studentid]->userid = $grade->studentid;
     }
     if ($scheduler->scale > 0) { // Grading numerically
-        foreach ($grades as $aGrade){
-            $gradesums[$aGrade->studentid]->sum = @$gradesums[$aGrade->studentid]->sum + $aGrade->grade;
-            $gradesums[$aGrade->studentid]->count = @$gradesums[$aGrade->studentid]->count + 1;
-            $gradesums[$aGrade->studentid]->max = (@$gradesums[$aGrade->studentid]->max < $aGrade->grade) ? $aGrade->grade : @$gradesums[$aGrade->studentid]->max ;
+        foreach ($grades as $agrade) {
+            $gradesums[$agrade->studentid]->sum = @$gradesums[$agrade->studentid]->sum + $agrade->grade;
+            $gradesums[$agrade->studentid]->count = @$gradesums[$agrade->studentid]->count + 1;
+            $gradesums[$agrade->studentid]->max = (@$gradesums[$agrade->studentid]->max < $agrade->grade) ? $agrade->grade : @$gradesums[$agrade->studentid]->max;
         }
-        
-        /// compute the adequate strategy
-        foreach($gradesums as $student => $aGradeSet){
+
+        // compute the adequate strategy
+        foreach ($gradesums as $student => $agradeset) {
             switch ($scheduler->gradingstrategy) {
                 case MAX_GRADE:
-                    $finalgrades[$student]->rawgrade = $aGradeSet->max;
+                    $finalgrades[$student]->rawgrade = $agradeset->max;
                     break;
                 case MEAN_GRADE:
-                    $finalgrades[$student]->rawgrade = $aGradeSet->sum / $aGradeSet->count ;
+                    $finalgrades[$student]->rawgrade = $agradeset->sum / $agradeset->count;
                     break;
             }
         }
-        
+
     } else { // Scales
         $scaleid = - ($scheduler->scale);
         $maxgrade = '';
         if ($scale = $DB->get_record('scale', array('id' => $scaleid))) {
             $scalegrades = make_menu_from_list($scale->scale);
-            foreach ($grades as $aGrade) {
-                $gradesums[$aGrade->studentid]->sum = @$gradesums[$aGrade->studentid]->sum + $aGrade->grade;
-                $gradesums[$aGrade->studentid]->count = @$gradesums[$aGrade->studentid]->count + 1;
-                $gradesums[$aGrade->studentid]->max = (@$gradesums[$aGrade->studentid]->max < $aGrade) ? $aGrade->grade : @$gradesums[$aGrade->studentid]->max ;
+            foreach ($grades as $agrade) {
+                $gradesums[$agrade->studentid]->sum = @$gradesums[$agrade->studentid]->sum + $agrade->grade;
+                $gradesums[$agrade->studentid]->count = @$gradesums[$agrade->studentid]->count + 1;
+                $gradesums[$agrade->studentid]->max = (@$gradesums[$agrade->studentid]->max < $agrade) ? $agrade->grade : @$gradesums[$agrade->studentid]->max;
             }
             $maxgrade = $scale->name;
         }
-        
-        /// compute the adequate strategy
-        foreach($gradesums as $student => $aGradeSet){
+
+        // compute the adequate strategy
+        foreach ($gradesums as $student => $agradeset) {
             switch ($scheduler->gradingstrategy){
                 case MAX_GRADE:
-                    $finalgrades[$student]->rawgrade = $aGradeSet->max;
+                    $finalgrades[$student]->rawgrade = $agradeset->max;
                     break;
                 case MEAN_GRADE:
-                    $finalgrades[$student]->rawgrade = $aGradeSet->sum / $aGradeSet->count ;
+                    $finalgrades[$student]->rawgrade = $agradeset->sum / $agradeset->count;
                     break;
             }
         }
-        
+
     }
     // include any empty grades
     if ($userid > 0) {
@@ -539,8 +544,8 @@ function scheduler_get_user_grades($scheduler, $userid=0) {
             $finalgrades[$userid]->rawgrade = null;
         }
     } else {
-        $gradeitem = grade_item::fetch(array('itemtype'=>'mod', 'itemmodule'=>'scheduler', 'iteminstance'=>$scheduler->id, 'courseid'=>$scheduler->course));
-        $existinggrades = grade_grade::fetch_all(array('itemid'=>$gradeitem->id));
+        $gradeitem = grade_item::fetch(array('itemtype' => 'mod', 'itemmodule' => 'scheduler', 'iteminstance' => $scheduler->id, 'courseid' => $scheduler->course));
+        $existinggrades = grade_grade::fetch_all(array('itemid' => $gradeitem->id));
         foreach ($existinggrades as $grade) {
             $u = $grade->userid;
             if (!array_key_exists($u, $finalgrades)) {
@@ -551,21 +556,20 @@ function scheduler_get_user_grades($scheduler, $userid=0) {
         }
     }
     return $finalgrades;
-    
-}
 
+}
 
 /**
  * Update all grades in gradebook.
  */
 function scheduler_upgrade_grades() {
     global $DB;
-    
+
     $sql = "SELECT COUNT('x')
         FROM {scheduler} s, {course_modules} cm, {modules} m
         WHERE m.name='scheduler' AND m.id=cm.module AND cm.instance=s.id";
     $count = $DB->count_records_sql($sql);
-    
+
     $sql = "SELECT s.*, cm.idnumber AS cmidnumber, s.course AS courseid
         FROM {scheduler} s, {course_modules} cm, {modules} m
         WHERE m.name='scheduler' AND m.id=cm.module AND cm.instance=s.id";
@@ -584,7 +588,6 @@ function scheduler_upgrade_grades() {
     $rs->close();
 }
 
-
 /**
  * Delete grade item for given scheduler
  *
@@ -594,13 +597,10 @@ function scheduler_upgrade_grades() {
 function scheduler_grade_item_delete($scheduler) {
     global $CFG;
     require_once($CFG->libdir.'/gradelib.php');
-    
+
     if (!isset($scheduler->courseid)) {
         $scheduler->courseid = $scheduler->course;
     }
-    
-    return grade_update('mod/scheduler', $scheduler->courseid, 'mod', 'scheduler', $scheduler->id, 0, NULL, array('deleted'=>1));
+
+    return grade_update('mod/scheduler', $scheduler->courseid, 'mod', 'scheduler', $scheduler->id, 0, null, array('deleted' => 1));
 }
-
-
-?>

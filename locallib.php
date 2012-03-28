@@ -1,8 +1,22 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * General library for the scheduler module.
- * 
+ *
  * @package    mod
  * @subpackage scheduler
  * @copyright  2011 Henning Bostelmann and others (see README.txt)
@@ -16,7 +30,7 @@ require_once(dirname(__FILE__).'/customlib.php');
 
 /**
  * Parameter $local added by power-web.at
- * When local Date is needed the $local Param must be set to 1 
+ * When local Date is needed the $local Param must be set to 1
  * @param int $date a timestamp
  * @param int $local
  * @todo check consistence
@@ -31,8 +45,8 @@ function scheduler_userdate($date, $local=0) {
 }
 
 /**
- * Parameter $local added by power-web.at 
- * When local Time is needed the $local Param must be set to 1 
+ * Parameter $local added by power-web.at
+ * When local Time is needed the $local Param must be set to 1
  * @param int $date a timestamp
  * @param int $local
  * @todo check consistence
@@ -45,7 +59,7 @@ function scheduler_usertime($date, $local=0) {
         if (!$timeformat = get_user_preferences('calendar_timeformat')) {
             $timeformat = get_string('strftimetime');
         }
-        return userdate($date, $timeformat);    
+        return userdate($date, $timeformat);
     }
 }
 
@@ -54,7 +68,7 @@ function scheduler_usertime($date, $local=0) {
  * @param int $cmid the course module
  * @return array of moodle user records
  */
-function scheduler_get_attendants($cmid){
+function scheduler_get_attendants($cmid) {
     $context = get_context_instance(CONTEXT_MODULE, $cmid);
     $attendants = get_users_by_capability ($context, 'mod/scheduler:attend', 'u.id,lastname,firstname,email,picture', 'lastname, firstname', '', '', '', '', false, false, false);
     return $attendants;
@@ -67,11 +81,11 @@ function scheduler_get_attendants($cmid){
  *                  users who are in one of these group(s).
  * @return array of moodle user records
  */
-function scheduler_get_possible_attendees($cm, $groups=''){
-		
+function scheduler_get_possible_attendees($cm, $groups='') {
+
     $context = get_context_instance(CONTEXT_MODULE, $cm->id);
     $attendees = get_users_by_capability($context, 'mod/scheduler:appoint', '', 'lastname, firstname', '', '', $groups, '', false, false, false);
-    
+
     return $attendees;
 }
 
@@ -89,29 +103,29 @@ function scheduler_get_possible_attendees($cm, $groups=''){
  */
 function scheduler_get_conflicts($schedulerid, $starttime, $endtime, $teacher=0, $student=0, $others=SCHEDULER_SELF, $careexclusive=true) {
     global $CFG, $DB;
-    
-    switch ($others){
+
+    switch ($others) {
         case SCHEDULER_SELF:
-            $schedulerScope = "s.schedulerid = {$schedulerid} AND ";
+            $schedulerscope = "s.schedulerid = {$schedulerid} AND ";
             break;
         case SCHEDULER_OTHERS:
-            $schedulerScope = "s.schedulerid != {$schedulerid} AND ";
+            $schedulerscope = "s.schedulerid != {$schedulerid} AND ";
             break;
         default:
-            $schedulerScope = '';
+            $schedulerscope = '';
     }
-    $teacherScope = ($teacher != 0) ? "s.teacherid = {$teacher} AND " : '' ;
-    $studentJoin = ($student != 0) ? "JOIN {scheduler_appointment} a ON a.slotid = s.id AND a.studentid = {$student} " : '' ;
-    $exclusiveClause = ($careexclusive) ? "exclusivity != 0 AND " : '' ;
-	$timeClause = "( (s.starttime <= {$starttime} AND s.starttime + s.duration * 60 > {$starttime}) OR ".
-        		  "  (s.starttime < {$endtime} AND s.starttime + s.duration * 60 >= {$endtime}) OR ".
-        		  "  (s.starttime >= {$starttime} AND s.starttime + s.duration * 60 <= {$endtime}) ) ";
+    $teacherscope = ($teacher != 0) ? "s.teacherid = {$teacher} AND " : '';
+    $studentjoin = ($student != 0) ? "JOIN {scheduler_appointment} a ON a.slotid = s.id AND a.studentid = {$student} " : '';
+    $exclusiveclause = ($careexclusive) ? "exclusivity != 0 AND " : '';
+    $timeclause = "( (s.starttime <= {$starttime} AND s.starttime + s.duration * 60 > {$starttime}) OR ".
+                  "  (s.starttime < {$endtime} AND s.starttime + s.duration * 60 >= {$endtime}) OR ".
+                  "  (s.starttime >= {$starttime} AND s.starttime + s.duration * 60 <= {$endtime}) ) ";
 
-    $sql = 'SELECT s.* from {scheduler_slots} s '.$studentJoin.' WHERE '.
-    		 $schedulerScope.$teacherScope.$exclusiveClause.$timeClause;
-        
+    $sql = 'SELECT s.* from {scheduler_slots} s '.$studentjoin.' WHERE '.
+             $schedulerscope.$teacherscope.$exclusiveclause.$timeclause;
+
     $conflicting = $DB->get_records_sql($sql);
-    
+
     return $conflicting;
 }
 
@@ -128,8 +142,8 @@ function scheduler_get_conflicts($schedulerid, $starttime, $endtime, $teacher=0,
  */
 function scheduler_get_consumed($schedulerid, $starttime, $endtime, $teacherid=0) {
     global $CFG, $DB;
-    
-    $teacherScope = ($teacherid != 0) ? " teacherid = '{$teacherid}' AND " : '' ;
+
+    $teacherscope = ($teacherid != 0) ? " teacherid = '{$teacherid}' AND " : '';
     $sql = "
         SELECT
         COUNT(*)
@@ -139,7 +153,7 @@ function scheduler_get_consumed($schedulerid, $starttime, $endtime, $teacherid=0
         WHERE
         a.slotid = s.id AND
         schedulerid = {$schedulerid} AND
-        {$teacherScope}
+        {$teacherscope}
         ( (s.starttime <= {$starttime} AND
         {$starttime} < s.starttime + s.duration * 60) OR
         (s.starttime < {$endtime} AND
@@ -147,7 +161,7 @@ function scheduler_get_consumed($schedulerid, $starttime, $endtime, $teacherid=0
         (s.starttime >= {$starttime} AND
         s.starttime + s.duration * 60 <= {$endtime}) )
         ";
-    $count = $DB->count_records_sql($sql, NULL);
+    $count = $DB->count_records_sql($sql, null);
     return $count;
 }
 
@@ -161,7 +175,7 @@ function scheduler_get_consumed($schedulerid, $starttime, $endtime, $teacherid=0
  */
 function scheduler_get_exclusivity($schedulerid, $starttime) {
     global $CFG, $DB;
-    
+
     $sql = '
         SELECT
         exclusivity
@@ -181,9 +195,9 @@ function scheduler_get_exclusivity($schedulerid, $starttime) {
  * @uses $CFG
  * @uses $DB
  */
-function scheduler_get_unappointed_slots($schedulerid){
+function scheduler_get_unappointed_slots($schedulerid) {
     global $CFG, $DB;
-    
+
     $sql = '
         SELECT
         s.*,
@@ -215,18 +229,18 @@ function scheduler_get_unappointed_slots($schedulerid){
  * @uses $CFG
  * @uses $DB
  */
-function scheduler_get_available_slots($studentid, $schedulerid, $studentside=false){
+function scheduler_get_available_slots($studentid, $schedulerid, $studentside=false) {
     global $CFG, $DB;
-    
+
     // more compatible tryout
     $slots = $DB->get_records('scheduler_slots', array('schedulerid' => $schedulerid), 'starttime');
     $retainedslots = array();
-    if ($slots){
-        foreach($slots as $slot){
+    if ($slots) {
+        foreach ($slots as $slot) {
             $slot->population = $DB->count_records('scheduler_appointment', array('slotid' => $slot->id));
             $slot->appointed = ($slot->population > 0);
             $slot->attended = $DB->record_exists('scheduler_appointment', array('slotid' => $slot->id, 'attended' => 1));
-            if ($studentside){
+            if ($studentside) {
                 $slot->appointedbyme = $DB->record_exists('scheduler_appointment', array('slotid' => $slot->id, 'studentid' => $studentid));
                 if ($slot->appointedbyme) {
                     $retainedslots[] = $slot;
@@ -234,13 +248,13 @@ function scheduler_get_available_slots($studentid, $schedulerid, $studentside=fa
                 }
             }
             // both side, slot is not complete
-            if ($slot->exclusivity == 0 or ($slot->exclusivity > 0 and $slot->population < $slot->exclusivity)){
+            if ($slot->exclusivity == 0 or ($slot->exclusivity > 0 and $slot->population < $slot->exclusivity)) {
                 $retainedslots[] = $slot;
                 continue;
             }
         }
     }
-    
+
     return $retainedslots;
 }
 
@@ -255,15 +269,15 @@ function scheduler_get_available_slots($studentid, $schedulerid, $studentside=fa
  * @uses $DB
  * @return the count of records
  */
-function scheduler_has_slot($userlist, &$scheduler, $student=true, $unattended = false, $otherthan = 0){
+function scheduler_has_slot($userlist, &$scheduler, $student=true, $unattended = false, $otherthan = 0) {
     global $CFG, $DB;
-    
+
     $userlist = str_replace(',', "','", $userlist);
-    
-    $unattendedClause = ($unattended) ? ' AND a.attended = 0 ' : '' ;
-    $otherthanClause = ($otherthan) ? " AND a.slotid != $otherthan " : '' ;
-    
-    if ($student){
+
+    $unattendedclause = ($unattended) ? ' AND a.attended = 0 ' : '';
+    $otherthanclause = ($otherthan) ? " AND a.slotid != $otherthan " : '';
+
+    if ($student) {
         $sql = "
             SELECT
             COUNT(*)
@@ -274,8 +288,8 @@ function scheduler_has_slot($userlist, &$scheduler, $student=true, $unattended =
             a.slotid = s.id AND
             s.schedulerid = ? AND
             a.studentid IN ('{$userlist}')
-            $unattendedClause
-            $otherthanClause
+            $unattendedclause
+            $otherthanclause
             ";
         return $DB->count_records_sql($sql, array($scheduler->id));
     } else {
@@ -290,9 +304,9 @@ function scheduler_has_slot($userlist, &$scheduler, $student=true, $unattended =
  * @uses $DB
  * @return an array of users
  */
-function scheduler_get_appointed($slotid){
+function scheduler_get_appointed($slotid) {
     global $CFG, $DB;
-    
+
     $sql = "
         SELECT
         u.*
@@ -312,22 +326,22 @@ function scheduler_get_appointed($slotid){
  * @param stdClass $scheduler (optional)
  * @uses $DB
  */
-function scheduler_delete_slot($slotid, $scheduler=null){
+function scheduler_delete_slot($slotid, $scheduler=null) {
     global $DB;
-    
+
     if ($slot = $DB->get_record('scheduler_slots', array('id' => $slotid))) {
         scheduler_delete_calendar_events($slot);
     }
     $DB->delete_records('scheduler_slots', array('id' => $slotid));
     $DB->delete_records('scheduler_appointment', array('slotid' => $slotid));
-    
+
     if ($slot) {
-    	if (!$scheduler){ // fetch optimization
-	        $scheduler = $DB->get_record('scheduler', array('id' => $slot->schedulerid));
-    	}
-    	scheduler_update_grades($scheduler); // generous, but works
+        if (!$scheduler) { // fetch optimization
+            $scheduler = $DB->get_record('scheduler', array('id' => $slot->schedulerid));
+        }
+        scheduler_update_grades($scheduler); // generous, but works
     }
-    
+
 }
 
 
@@ -338,11 +352,11 @@ function scheduler_delete_slot($slotid, $scheduler=null){
  * @uses $CFG
  * @uses $DB
  */
-function scheduler_get_appointments($slotid){
+function scheduler_get_appointments($slotid) {
     global $CFG, $DB;
-    
+
     $apps = $DB->get_records('scheduler_appointment', array('slotid' => $slotid));
-    
+
     return $apps;
 }
 
@@ -354,28 +368,30 @@ function scheduler_get_appointments($slotid){
  * @param object $scheduler
  * @uses $DB
  */
-function scheduler_delete_appointment($appointmentid, $slot=null, $scheduler=null){
+function scheduler_delete_appointment($appointmentid, $slot=null, $scheduler=null) {
     global $DB;
-    
-    if (!$oldrecord = $DB->get_record('scheduler_appointment', array('id' => $appointmentid))) return ;
-    
-    if (!$slot){ // fetch optimization
+
+    if (!$oldrecord = $DB->get_record('scheduler_appointment', array('id' => $appointmentid))) {
+        return;
+    }
+
+    if (!$slot) { // fetch optimization
         $slot = $DB->get_record('scheduler_slots', array('id' => $oldrecord->slotid));
     }
-    if($slot){
+    if ($slot) {
         // delete appointment
         if (!$DB->delete_records('scheduler_appointment', array('id' => $appointmentid))) {
             print_error('Couldn\'t delete old choice from database');
         }
-        if (!$scheduler){ // fetch optimization
+        if (!$scheduler) { // fetch optimization
             $scheduler = $DB->get_record('scheduler', array('id' => $slot->schedulerid));
         }
-        scheduler_update_grades($scheduler, $oldrecord->studentid);        
+        scheduler_update_grades($scheduler, $oldrecord->studentid);
         // not reusable slot. Delete it if slot is too near and has no more appointments.
         if ($slot->reuse == 0) {
             $consumed = scheduler_get_consumed($slot->schedulerid, $slot->starttime, $slot->starttime + $slot->duration * 60);
-            if (!$consumed){
-                if (time() > 0 ) { //  ULPGC ecastro, volatiles are deleted always   $slot->starttime - $scheduler->reuseguardtime * 3600){
+            if (!$consumed) {
+                if (time() > 0 ) { //  ULPGC ecastro, volatiles are deleted always   $slot->starttime - $scheduler->reuseguardtime * 3600) {
                     if (!$DB->delete_records('scheduler_slots', array('id' => $slot->id))) {
                         print_error('Couldn\'t delete old choice from database');
                     }
@@ -392,21 +408,22 @@ function scheduler_delete_appointment($appointmentid, $slot=null, $scheduler=nul
  * @uses $DB
  * @return the last known location for the current user (teacher)
  */
-function scheduler_get_last_location(&$scheduler){
+function scheduler_get_last_location(&$scheduler) {
     global $USER, $DB;
-    
+
     // we could have made an embedded query in Mysql 5.0
     $lastlocation = '';
     $select = 'schedulerid = ? AND teacherid = ? GROUP BY timemodified';
     $maxtime = $DB->get_field_select('scheduler_slots', 'MAX(timemodified)', $select, array($scheduler->id, $USER->id), IGNORE_MULTIPLE);
-    if ($maxtime){
+    if ($maxtime) {
         $select = "
-            schedulerid = :schedulerid AND 
-            timemodified = :maxtime AND 
-            teacherid = :userid 
+            schedulerid = :schedulerid AND
+            timemodified = :maxtime AND
+            teacherid = :userid
             GROUP BY timemodified
             ";
-        $maxid = $DB->get_field_select('scheduler_slots', 'MAX(timemodified)', $select, array('schedulerid' => $scheduler->id, 'maxtime' => $maxtime, 'userid' => $USER->id), IGNORE_MULTIPLE );
+        $maxid = $DB->get_field_select('scheduler_slots', 'MAX(timemodified)', $select,
+            array('schedulerid' => $scheduler->id, 'maxtime' => $maxtime, 'userid' => $USER->id), IGNORE_MULTIPLE );
         $lastlocation = $DB->get_field('scheduler_slots', 'appointmentlocation', array('id' => $maxid));
     }
     return $lastlocation;
@@ -420,10 +437,10 @@ function scheduler_get_last_location(&$scheduler){
  * @uses $DB
  * @return void
  */
-function scheduler_free_late_unused_slots($schedulerid, $now=0){
+function scheduler_free_late_unused_slots($schedulerid, $now=0) {
     global $CFG, $DB;
-    
-    if(!$now) {
+
+    if (!$now) {
         $now = time();
     }
     $sql = '
@@ -441,7 +458,7 @@ function scheduler_free_late_unused_slots($schedulerid, $now=0){
         starttime < ?
         ';
     $to_delete = $DB->get_records_sql($sql, array($schedulerid, $now));
-    if ($to_delete){
+    if ($to_delete) {
         list($usql, $params) = $DB->get_in_or_equal(array_keys($to_delete));
         $DB->delete_records_select('scheduler_slots', " id $usql ", $params);
     }
@@ -456,122 +473,124 @@ function scheduler_free_late_unused_slots($schedulerid, $now=0){
   * Updates events in the calendar to the information provided.
   * If the events do not yet exist it creates them.
   * The only argument this function requires is the complete database record of a scheduler slot.
-  * The course parameter should be the full record of the course for this scheduler so the 
+  * The course parameter should be the full record of the course for this scheduler so the
   * teacher-title and student-title can be determined.
   * @param object $slot the slot instance
   * @param object $course the actual course
   */
-function scheduler_add_update_calendar_events($slot, $course) {    
-    
+function scheduler_add_update_calendar_events($slot, $course) {
+
     global $DB;
-    
+
     //firstly, collect up the information we'll need no matter what.
-    $eventDuration = ($slot->duration) * 60;
-    $eventStartTime = $slot->starttime;
-    
+    $eventduration = ($slot->duration) * 60;
+    $eventstarttime = $slot->starttime;
+
     // get all students attached to that slot
     $appointments = $DB->get_records('scheduler_appointment', array('slotid'=>$slot->id), '', 'studentid,studentid');
-    
+
     // nothing to do
-    if (!$appointments) return;
-    
+    if (!$appointments) {
+        return;
+    }
+
     $studentids = array_keys($appointments);
-    
+
     $teacher = $DB->get_record('user', array('id'=>$slot->teacherid));
     $students = $DB->get_records_list('user', 'id', $studentids);
-    
-    $schedulerDescription = $DB->get_field('scheduler', 'intro', array('id' => $slot->schedulerid));
-    $schedulerName = $DB->get_field('scheduler', 'name', array('id' => $slot->schedulerid));
-    $teacherEventDescription = "$schedulerName<br/><br/>$schedulerDescription";
-    
-    $studentEventDescription = $teacherEventDescription;
-    
+
+    $schedulerdescription = $DB->get_field('scheduler', 'intro', array('id' => $slot->schedulerid));
+    $schedulername = $DB->get_field('scheduler', 'name', array('id' => $slot->schedulerid));
+    $teachereventdescription = "$schedulername<br/><br/>$schedulerdescription";
+
+    $studenteventdescription = $teachereventdescription;
+
     //the eventtype field stores a code that is used to relate calendar events with the slots that 'own' them.
     //the code is SSstu (for a student event) or SSsup (for a teacher event).
     //then, the id of the scheduler slot that it belongs to.
     //finally, the courseID. I can't remember why, TODO: remember the good reason.
-    //all in a colon delimited string. This will run into problems when the IDs of slots and courses are bigger than 7 digits in length...    
-    $teacherEventType = "SSsup:{$slot->id}:{$course->id}";
-    $studentEventType = "SSstu:{$slot->id}:{$course->id}";
-    
-    $studentNames = array();
-    
-    foreach($students as $student){
-        $studentNames[] = fullname($student);
-        $studentEventName = get_string('meetingwith', 'scheduler').' '.get_string('teacher','scheduler').', '.fullname($teacher);
-        $studentEventName = shorten_text($studentEventName, 200);
-        
+    //all in a colon delimited string. This will run into problems when the IDs of slots and courses are bigger than 7 digits in length...
+    $teachereventtype = "SSsup:{$slot->id}:{$course->id}";
+    $studenteventtype = "SSstu:{$slot->id}:{$course->id}";
+
+    $studentnames = array();
+
+    foreach ($students as $student) {
+        $studentnames[] = fullname($student);
+        $studenteventname = get_string('meetingwith', 'scheduler').' '.get_string('teacher', 'scheduler').', '.fullname($teacher);
+        $studenteventname = shorten_text($studenteventname, 200);
+
         //firstly, deal with the student's event
         //if it exists, update it, else create a new one.
 
-		$studentEvent = scheduler_get_student_event($slot, $student->id);
-        
-        if ($studentEvent) {
-            $studentEvent->name = $studentEventName;
-            $studentEvent->description = $studentEventDescription;
-            $studentEvent->format = 1;
-            $studentEvent->userid = $student->id;
-            $studentEvent->timemodified = time();
-            // $studentEvent->modulename = 'scheduler'; // Issue on delete/edit link
-            $studentEvent->instance = $slot->schedulerid;
-            $studentEvent->timestart = $eventStartTime;
-            $studentEvent->timeduration = $eventDuration;
-            $studentEvent->visible = 1;
-            $studentEvent->eventtype = $studentEventType;
-            $DB->update_record('event', $studentEvent);
+        $studentevent = scheduler_get_student_event($slot, $student->id);
+
+        if ($studentevent) {
+            $studentevent->name = $studenteventname;
+            $studentevent->description = $studenteventdescription;
+            $studentevent->format = 1;
+            $studentevent->userid = $student->id;
+            $studentevent->timemodified = time();
+            // $studentevent->modulename = 'scheduler'; // Issue on delete/edit link
+            $studentevent->instance = $slot->schedulerid;
+            $studentevent->timestart = $eventstarttime;
+            $studentevent->timeduration = $eventduration;
+            $studentevent->visible = 1;
+            $studentevent->eventtype = $studenteventtype;
+            $DB->update_record('event', $studentevent);
         } else {
-            $studentEvent->name = $studentEventName;
-            $studentEvent->description = $studentEventDescription;
-            $studentEvent->format = 1;
-            $studentEvent->userid = $student->id;
-            $studentEvent->timemodified = time();
-            // $studentEvent->modulename = 'scheduler';
-            $studentEvent->instance = $slot->schedulerid;
-            $studentEvent->timestart = $eventStartTime;
-            $studentEvent->timeduration = $eventDuration;
-            $studentEvent->visible = 1;
-            $studentEvent->id = null;
-            $studentEvent->eventtype = $studentEventType;
+            $studentevent->name = $studenteventname;
+            $studentevent->description = $studenteventdescription;
+            $studentevent->format = 1;
+            $studentevent->userid = $student->id;
+            $studentevent->timemodified = time();
+            // $studentevent->modulename = 'scheduler';
+            $studentevent->instance = $slot->schedulerid;
+            $studentevent->timestart = $eventstarttime;
+            $studentevent->timeduration = $eventduration;
+            $studentevent->visible = 1;
+            $studentevent->id = null;
+            $studentevent->eventtype = $studenteventtype;
             // This should be changed to use add_event()
-            $DB->insert_record('event', $studentEvent);
+            $DB->insert_record('event', $studentevent);
         }
-        
+
     }
-    
-    if (count($studentNames) > 1){
-        $teacherEventName = get_string('meetingwithplural', 'scheduler').' '.get_string('students', 'scheduler').', '.implode(', ', $studentNames);
+
+    if (count($studentnames) > 1) {
+        $teachereventname = get_string('meetingwithplural', 'scheduler').' '.get_string('students', 'scheduler').', '.implode(', ', $studentnames);
     } else {
-        $teacherEventName = get_string('meetingwith', 'scheduler').' '.get_string('student', 'scheduler').', '.$studentNames[0];
+        $teachereventname = get_string('meetingwith', 'scheduler').' '.get_string('student', 'scheduler').', '.$studentnames[0];
     }
-    $teacherEventName = shorten_text($teacherEventName, 200);
-	$teacherEvent = scheduler_get_teacher_event($slot);
-    if ($teacherEvent) {
-        $teacherEvent->name = $teacherEventName;
-        $teacherEvent->description = $teacherEventDescription;
-        $teacherEvent->format = 1;
-        $teacherEvent->userid = $slot->teacherid;
-        $teacherEvent->timemodified = time();
-        // $teacherEvent->modulename = 'scheduler';
-        $teacherEvent->instance = $slot->schedulerid;
-        $teacherEvent->timestart = $eventStartTime;
-        $teacherEvent->timeduration = $eventDuration;
-        $teacherEvent->visible = 1;
-        $teacherEvent->eventtype = $teacherEventType;
-        $DB->update_record('event', $teacherEvent);
+    $teachereventname = shorten_text($teachereventname, 200);
+    $teacherevent = scheduler_get_teacher_event($slot);
+    if ($teacherevent) {
+        $teacherevent->name = $teachereventname;
+        $teacherevent->description = $teachereventdescription;
+        $teacherevent->format = 1;
+        $teacherevent->userid = $slot->teacherid;
+        $teacherevent->timemodified = time();
+        // $teacherevent->modulename = 'scheduler';
+        $teacherevent->instance = $slot->schedulerid;
+        $teacherevent->timestart = $eventstarttime;
+        $teacherevent->timeduration = $eventduration;
+        $teacherevent->visible = 1;
+        $teacherevent->eventtype = $teachereventtype;
+        $DB->update_record('event', $teacherevent);
     } else {
-        $teacherEvent->name = $teacherEventName;
-        $teacherEvent->description = $teacherEventDescription;
-        $teacherEvent->format = 1;
-        $teacherEvent->userid = $slot->teacherid;
-        $teacherEvent->instance = $slot->schedulerid;
-        $teacherEvent->timemodified = time();
-        // $teacherEvent->modulename = 'scheduler';
-        $teacherEvent->timestart = $eventStartTime;
-        $teacherEvent->timeduration = $eventDuration;
-        $teacherEvent->visible = 1;
-        $teacherEvent->id = null;
-        $teacherEvent->eventtype = $teacherEventType;
-        $DB->insert_record('event', $teacherEvent);
+        $teacherevent->name = $teachereventname;
+        $teacherevent->description = $teachereventdescription;
+        $teacherevent->format = 1;
+        $teacherevent->userid = $slot->teacherid;
+        $teacherevent->instance = $slot->schedulerid;
+        $teacherevent->timemodified = time();
+        // $teacherevent->modulename = 'scheduler';
+        $teacherevent->timestart = $eventstarttime;
+        $teacherevent->timeduration = $eventduration;
+        $teacherevent->visible = 1;
+        $teacherevent->id = null;
+        $teacherevent->eventtype = $teachereventtype;
+        $DB->insert_record('event', $teacherevent);
     }
 }
 
@@ -580,23 +599,25 @@ function scheduler_add_update_calendar_events($slot, $course) {
  * Will delete calendar events for a given scheduler slot, and not complain if the record does not exist.
  * The only argument this function requires is the complete database record of a scheduler slot.
  * @param object $slot the slot instance
- * @uses $DB 
+ * @uses $DB
  * @return boolean true if success, false otherwise
  */
 function scheduler_delete_calendar_events($slot) {
     global $DB;
-    
+
     $scheduler = $DB->get_record('scheduler', array('id'=>$slot->schedulerid));
-    
-    if (!$scheduler) return false ;
-    
-    $teacherEventType = "SSsup:{$slot->id}:{$scheduler->course}";
-    $studentEventType = "SSstu:{$slot->id}:{$scheduler->course}";
-    
-    $teacherDeletionSuccess = $DB->delete_records('event', array('eventtype'=>$teacherEventType));
-    $studentDeletionSuccess = $DB->delete_records('event', array('eventtype'=>$studentEventType));
-    
-    return ($teacherDeletionSuccess && $studentDeletionSuccess);
+
+    if (!$scheduler) {
+        return false;
+    }
+
+    $teachereventtype = "SSsup:{$slot->id}:{$scheduler->course}";
+    $studenteventtype = "SSstu:{$slot->id}:{$scheduler->course}";
+
+    $teacherdeletionsuccess = $DB->delete_records('event', array('eventtype'=>$teachereventtype));
+    $studentdeletionsuccess = $DB->delete_records('event', array('eventtype'=>$studenteventtype));
+
+    return ($teacherdeletionsuccess && $studentdeletionsuccess);
     //this return may not be meaningful if the delete records functions do not return anything meaningful.
 }
 
@@ -611,14 +632,13 @@ function scheduler_delete_calendar_events($slot) {
  */
 function scheduler_events_update($slot, $course) {
     global $DB;
-    
-    $slotDoesntHaveAStudent = !$DB->count_records('scheduler_appointment', array('slotid' => $slot->id));
-    $slotWasAttended = $DB->count_records('scheduler_appointment', array('slotid' => $slot->id, 'attended' => 1));
-    
-    if ($slotDoesntHaveAStudent || $slotWasAttended) {
+
+    $slotdoesnthaveastudent = !$DB->count_records('scheduler_appointment', array('slotid' => $slot->id));
+    $slotwasattended = $DB->count_records('scheduler_appointment', array('slotid' => $slot->id, 'attended' => 1));
+
+    if ($slotdoesnthaveastudent || $slotwasattended) {
         scheduler_delete_calendar_events($slot);
-    }
-    else {
+    } else {
         scheduler_add_update_calendar_events($slot, $course);
     }
 }
@@ -626,29 +646,29 @@ function scheduler_events_update($slot, $course) {
 /**
  * This function gets the calendar entry of the teacher relating to a slot.
  * If none is found, the return value is false.
- * 
+ *
  * @param object $slot the slot instance
  * @uses $DB
  * @return stdClass the calendar event of the teacher
  */
 function scheduler_get_teacher_event($slot) {
     global $DB;
-    
+
     //first we need to know the course that the scheduler belongs to...
     $courseid = $DB->get_field('scheduler', 'course', array('id' => $slot->schedulerid), MUST_EXIST);
-    
+
     //now try to fetch the event records...
-    $teacherEventType = "SSsup:{$slot->id}:{$courseid}";
-    
-    $event = $DB->get_record('event', array('eventtype' => $teacherEventType), '*', IGNORE_MISSING);
-    
-	return $event; 
+    $teachereventtype = "SSsup:{$slot->id}:{$courseid}";
+
+    $event = $DB->get_record('event', array('eventtype' => $teachereventtype), '*', IGNORE_MISSING);
+
+    return $event;
 }
 
 /**
  * This function gets the calendar entry of a student relating to a slot.
  * If none is found, the return value is false.
- * 
+ *
  * @param object $slot the slot instance
  * @param int $studentid the id number of the student record
  * @uses $DB
@@ -656,15 +676,15 @@ function scheduler_get_teacher_event($slot) {
  */
 function scheduler_get_student_event($slot, $studentid) {
     global $DB;
-    
+
     //first we need to know the course that the scheduler belongs to...
     $courseid = $DB->get_field('scheduler', 'course', array('id' => $slot->schedulerid), MUST_EXIST);
-    
+
     //now try to fetch the event records...
-    $studentEventType = "SSstu:{$slot->id}:{$courseid}";
-    
-    $event = $DB->get_record('event', array('eventtype' => $studentEventType, 'userid'=>$studentid), '*', IGNORE_MISSING);
-	return $event; 
+    $studenteventtype = "SSstu:{$slot->id}:{$courseid}";
+
+    $event = $DB->get_record('event', array('eventtype' => $studenteventtype, 'userid'=>$studentid), '*', IGNORE_MISSING);
+    return $event;
 }
 
 
@@ -676,33 +696,31 @@ function scheduler_get_student_event($slot, $studentid) {
  * not used, or no grade is available; parantheses are put around the grade if it is present)
  * @return string the formatted grade
  */
-function scheduler_format_grade(&$scheduler, $grade, $short=false){
-    
+function scheduler_format_grade(&$scheduler, $grade, $short=false) {
+
     global $DB;
-    
+
     $result = '';
-    if ($scheduler->scale == 0 || is_null($grade) ){
+    if ($scheduler->scale == 0 || is_null($grade) ) {
         // scheduler doesn't allow grading, or no grade entered
         if (!$short) {
             $result = get_string('nograde');
         }
-    }
-    else {
+    } else {
         if ($scheduler->scale > 0) {
             // numeric grades
             $result .= $grade;
-            if (strlen($grade)>0){
+            if (strlen($grade)>0) {
                 $result .=  '/' . $scheduler->scale;
             }
-        }
-        else{
+        } else {
             // grade on scale
             if ($grade > 0) {
                 $scaleid = - ($scheduler->scale);
                 if ($scale = $DB->get_record('scale', array('id'=>$scaleid))) {
-                    $levels = explode(',',$scale->scale);
+                    $levels = explode(',', $scale->scale);
                     if ($grade <= count($levels)) {
-                    	$result .= $levels[$grade-1];
+                        $result .= $levels[$grade-1];
                     }
                 }
             }
@@ -722,13 +740,12 @@ function scheduler_format_grade(&$scheduler, $grade, $short=false){
  * @return the html selection element for a grading list
  */
 function scheduler_make_grading_menu(&$scheduler, $id, $selected = '') {
-	global $DB;
-    if ($scheduler->scale > 0){
-        for($i = 0 ; $i <= $scheduler->scale ; $i++) {
-            $scalegrades[$i] = $i; 
+    global $DB;
+    if ($scheduler->scale > 0) {
+        for ($i = 0; $i <= $scheduler->scale; $i++) {
+            $scalegrades[$i] = $i;
         }
-    }
-    else {
+    } else {
         $scaleid = - ($scheduler->scale);
         if ($scale = $DB->get_record('scale', array('id'=>$scaleid))) {
             $scalegrades = make_menu_from_list($scale->scale);
@@ -740,27 +757,27 @@ function scheduler_make_grading_menu(&$scheduler, $id, $selected = '') {
 
 
 /**
- * Construct an array with subtitution rules for mail templates, relating to 
+ * Construct an array with subtitution rules for mail templates, relating to
  * a single appointment. Any of the parameters can be null.
  * @param object $scheduler The scheduler instance
  * @param object $slot The slot data, obtained with get_record().
  * @param user $attendant A {@link $USER} object describing the attendant (teacher)
  * @param user $attendee A {@link $USER} object describing the attendee (student)
- * @return array A hash with mail template substitutions 
+ * @return array A hash with mail template substitutions
  */
 function scheduler_get_mail_variables ($scheduler, $slot, $attendant, $attendee) {
-    
+
     global $CFG;
-    
+
     $vars = array();
-    
+
     if ($scheduler) {
         $vars['MODULE']     = $scheduler->name;
         $vars['STAFFROLE']  = scheduler_get_teacher_name($scheduler);
     }
     if ($slot) {
-        $vars ['DATE']     = userdate($slot->starttime,get_string('strftimedate'));
-        $vars ['TIME']     = userdate($slot->starttime,get_string('strftimetime'));
+        $vars ['DATE']     = userdate($slot->starttime, get_string('strftimedate'));
+        $vars ['TIME']     = userdate($slot->starttime, get_string('strftimetime'));
         $vars ['ENDTIME']  = userdate($slot->starttime+$slot->duration*60, get_string('strftimetime'));
         $vars ['LOCATION'] = $slot->appointmentlocation;
     }
@@ -772,9 +789,9 @@ function scheduler_get_mail_variables ($scheduler, $slot, $attendant, $attendee)
         $vars['ATTENDEE']     = fullname($attendee);
         $vars['ATTENDEE_URL'] = $CFG->wwwroot.'/user/view.php?id='.$attendee->id;
     }
-    
+
     return $vars;
-    
+
 }
 
 /**
@@ -786,24 +803,24 @@ function scheduler_get_mail_variables ($scheduler, $slot, $attendant, $attendee)
  * @param course $course A {@link $COURSE} object representing a course
  */
 function scheduler_print_user($user, $course, $messageselect=false, $return=false) {
-    
-    global $CFG, $USER, $OUTPUT ;
-    
+
+    global $CFG, $USER, $OUTPUT;
+
     $output = '';
-    
+
     static $string;
     static $datestring;
     static $countries;
-    
+
     $context = get_context_instance(CONTEXT_COURSE, $course->id);
     if (isset($user->context->id)) {
         $usercontext = $user->context;
     } else {
         $usercontext = get_context_instance(CONTEXT_USER, $user->id);
     }
-    
+
     if (empty($string)) {     // Cache all the strings for the rest of the page
-        
+
         $string->email       = get_string('email');
         $string->lastaccess  = get_string('lastaccess');
         $string->activity    = get_string('activity');
@@ -812,7 +829,7 @@ function scheduler_print_user($user, $course, $messageselect=false, $return=fals
         $string->role        = get_string('role');
         $string->name        = get_string('name');
         $string->never       = get_string('never');
-        
+
         $datestring->day     = get_string('day');
         $datestring->days    = get_string('days');
         $datestring->hour    = get_string('hour');
@@ -823,16 +840,16 @@ function scheduler_print_user($user, $course, $messageselect=false, $return=fals
         $datestring->secs    = get_string('secs');
         $datestring->year    = get_string('year');
         $datestring->years   = get_string('years');
-        
+
     }
-    
+
     /// Get the hidden field list
     if (has_capability('moodle/course:viewhiddenuserfields', $context)) {
         $hiddenfields = array();
     } else {
         $hiddenfields = array_flip(explode(',', $CFG->hiddenuserfields));
     }
-    
+
     $output .= '<table class="userinfobox">';
     $output .= '<tr>';
     $output .= '<td class="left side">';
@@ -845,12 +862,11 @@ function scheduler_print_user($user, $course, $messageselect=false, $return=fals
         $output .= $string->role .': '. $user->role .'<br />';
     }
 
-	$extrafields = scheduler_get_user_fields($user);
-	foreach ($extrafields as $field) {
-        $output .= $field->title . ': ' . $field->value . '<br />';	    
-	}
-	
-    
+    $extrafields = scheduler_get_user_fields($user);
+    foreach ($extrafields as $field) {
+        $output .= $field->title . ': ' . $field->value . '<br />';
+    }
+
     if (!isset($hiddenfields['lastaccess'])) {
         if ($user->lastaccess) {
             $output .= $string->lastaccess .': '. userdate($user->lastaccess);
@@ -862,24 +878,24 @@ function scheduler_print_user($user, $course, $messageselect=false, $return=fals
     $output .= '</div></td><td class="links">';
     //link to blogs
     if ($CFG->bloglevel > 0) {
-        $output .= '<a href="'.$CFG->wwwroot.'/blog/index.php?userid='.$user->id.'">'.get_string('blogs','blog').'</a><br />';
+        $output .= '<a href="'.$CFG->wwwroot.'/blog/index.php?userid='.$user->id.'">'.get_string('blogs', 'blog').'</a><br />';
     }
     //link to notes
     if (!empty($CFG->enablenotes) and (has_capability('moodle/notes:manage', $context) || has_capability('moodle/notes:view', $context))) {
-        $output .= '<a href="'.$CFG->wwwroot.'/notes/index.php?course=' . $course->id. '&amp;user='.$user->id.'">'.get_string('notes','notes').'</a><br />';
+        $output .= '<a href="'.$CFG->wwwroot.'/notes/index.php?course=' . $course->id. '&amp;user='.$user->id.'">'.get_string('notes', 'notes').'</a><br />';
     }
-    
+
     if (has_capability('moodle/site:viewreports', $context) or has_capability('moodle/user:viewuseractivitiesreport', $usercontext)) {
         $output .= '<a href="'. $CFG->wwwroot .'/course/user.php?id='. $course->id .'&amp;user='. $user->id .'">'. $string->activity .'</a><br />';
     }
     $output .= '<a href="'. $CFG->wwwroot .'/user/profile.php?id='. $user->id .'">'. $string->fullprofile .'...</a>';
-    
+
     if (!empty($messageselect)) {
         $output .= '<br /><input type="checkbox" name="user'.$user->id.'" /> ';
     }
-    
+
     $output .= '</td></tr></table>';
-    
+
     if ($return) {
         return $output;
     } else {
@@ -896,7 +912,7 @@ function scheduler_get_teacher_name($scheduler) {
 }
 
 function scheduler_group_scheduling_enabled($course, $cm) {
-	global $CFG;
+    global $CFG;
     $globalenable = (bool) $CFG->scheduler_groupscheduling;
     $localenable = (groupmode($course, $cm) > 0);
     return $globalenable && $localenable;
@@ -906,19 +922,20 @@ function scheduler_group_scheduling_enabled($course, $cm) {
 /**
  * adds an error css marker in case of matching error
  * @param array $errors the current error set
- * @param string $errorkey 
+ * @param string $errorkey
  */
-if (!function_exists('print_error_class')){
-    function print_error_class($errors, $errorkeylist){
-        if ($errors){
-            foreach($errors as $anError){
-                if ($anError->on == '') continue;
-                if (preg_match("/\\b{$anError->on}\\b/" ,$errorkeylist)){
+if (!function_exists('print_error_class')) {
+    function print_error_class($errors, $errorkeylist) {
+        if ($errors) {
+            foreach ($errors as $anerror) {
+                if ($anerror->on == '') {
+                    continue;
+                }
+                if (preg_match("/\\b{$anerror->on}\\b/", $errorkeylist)) {
                     echo " class=\"formerror\" ";
                     return;
                 }
-            }        
+            }
         }
     }
 }
-?>

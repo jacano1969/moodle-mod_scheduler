@@ -1,26 +1,38 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * Contains various sub-screens that a teacher can see.
- * 
+ *
  * @package    mod
  * @subpackage scheduler
  * @copyright  2011 Henning Bostelmann and others (see README.txt)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-
 defined('MOODLE_INTERNAL') || die();
 
-
-function get_slot_data(&$form){
-    if (!$form->hideuntil = optional_param('hideuntil', '', PARAM_INT)){
+function get_slot_data(&$form) {
+    if (!$form->hideuntil = optional_param('hideuntil', '', PARAM_INT)) {
         $form->displayyear = required_param('displayyear', PARAM_INT);
         $form->displaymonth = required_param('displaymonth', PARAM_INT);
         $form->displayday = required_param('displayday', PARAM_INT);
         $form->hideuntil = make_timestamp($form->displayyear, $form->displaymonth, $form->displayday);
     }
-    if (!$form->starttime = optional_param('starttime', '', PARAM_INT)){
+    if (!$form->starttime = optional_param('starttime', '', PARAM_INT)) {
         $form->year = required_param('year', PARAM_INT);
         $form->month = required_param('month', PARAM_INT);
         $form->day = required_param('day', PARAM_INT);
@@ -39,8 +51,8 @@ function get_slot_data(&$form){
 /**
  *
  */
-function get_session_data(&$form){
-    if (!$form->rangestart = optional_param('rangestart', '', PARAM_INT)){
+function get_session_data(&$form) {
+    if (!$form->rangestart = optional_param('rangestart', '', PARAM_INT)) {
         $year = required_param('startyear', PARAM_INT);
         $month = required_param('startmonth', PARAM_INT);
         $day = required_param('startday', PARAM_INT);
@@ -49,7 +61,7 @@ function get_session_data(&$form){
         $form->startminute = required_param('startminute', PARAM_INT);
         $form->timestart = make_timestamp($year, $month, $day, $form->starthour, $form->startminute);
     }
-    if (!$form->rangeend = optional_param('rangeend', '', PARAM_INT)){
+    if (!$form->rangeend = optional_param('rangeend', '', PARAM_INT)) {
         $year = required_param('endyear', PARAM_INT);
         $month = required_param('endmonth', PARAM_INT);
         $day = required_param('endday', PARAM_INT);
@@ -81,23 +93,25 @@ $modinfo = get_fast_modinfo($course);
 
 $usergroups = '';
 if ($cm->groupmode > 0) {
-	$groups = groups_get_all_groups($COURSE->id, 0, $cm->groupingid);
-	$usergroups = array_keys($groups);
+    $groups = groups_get_all_groups($COURSE->id, 0, $cm->groupingid);
+    $usergroups = array_keys($groups);
 }
 
-if ($action){
+if ($action) {
     include($CFG->dirroot.'/mod/scheduler/teacherview.controller.php');
 }
 
 
-/************************************ View : New single slot form ****************************************/
-if ($action == 'addslot'){
+// View : New single slot form
+if ($action == 'addslot') {
     echo $OUTPUT->heading(get_string('addsingleslot', 'scheduler'));
-    
-    if (empty($subaction)){
+
+    if (empty($subaction)) {
         $form->what = 'doaddupdateslot';
         // blank appointment data
-        if (empty($form->appointments)) $form->appointments = array();
+        if (empty($form->appointments)) {
+            $form->appointments = array();
+        }
         $form->starttime = time();
         $form->duration = 15;
         $form->reuse = 1;
@@ -106,41 +120,43 @@ if ($action == 'addslot'){
         $form->notes = '';
         $form->teacherid = $USER->id;
         $form->appointmentlocation = scheduler_get_last_location($scheduler);
-    } elseif($subaction == 'cancel') {
+    } else if ($subaction == 'cancel') {
         get_slot_data($form);
         $form->what = 'doaddupdateslot';
         $form->appointments = unserialize(stripslashes(required_param('appointmentssaved', PARAM_RAW)));
     } else {
-        $retcode = include "teacherview.subcontroller.php";
-        if ($retcode == -1) return -1;
+        $retcode = include("teacherview.subcontroller.php");
+        if ($retcode == -1) {
+            return -1;
+        }
     }
-    
+
     /// print errors
-    if (!empty($errors)){
+    if (!empty($errors)) {
         $errorstr = '';
-        foreach($errors as $anError){
-            $errorstr .= $anError->message;
+        foreach ($errors as $anerror) {
+            $errorstr .= $anerror->message;
         }
         echo $OUTPUT->box($errorstr, 'center', '70%', '', 5, 'errorbox');
     }
-    
+
     /// print form
     echo $OUTPUT->box_start('center', '', '');
     include('oneslotform.html');
     echo $OUTPUT->box_end();
     echo '<br />';
-    
+
     // return code for include
     return -1;
 }
 /************************************ View : Update single slot form ****************************************/
 if ($action == 'updateslot') {
     $slotid = required_param('slotid', PARAM_INT);
-    
+
     echo $OUTPUT->heading(get_string('updatesingleslot', 'scheduler'));
-    
-    if(empty($subaction)){
-        if(!empty($errors)){ // if some errors, get data from client side
+
+    if (empty($subaction)) {
+        if (!empty($errors)) { // if some errors, get data from client side
             get_slot_data($form);
             $form->appointments = unserialize(stripslashes(required_param('appointments', PARAM_RAW)));
         } else {
@@ -151,55 +167,58 @@ if ($action == 'updateslot') {
             $form->appointments = array();
             $appointments = $DB->get_records('scheduler_appointment', array('slotid'=>$slotid));
             // convert appointement keys to studentid
-            if ($appointments){
-                foreach($appointments as $appointment){
+            if ($appointments) {
+                foreach ($appointments as $appointment) {
                     $form->appointments[$appointment->studentid] = $appointment;
                 }
             }
         }
-    } elseif($subaction == 'cancel') {
+    } else if ($subaction == 'cancel') {
         get_slot_data($form);
         $form->appointments = unserialize(stripslashes(required_param('appointmentssaved', PARAM_RAW)));
         $form->studentid = required_param('studentid', PARAM_INT);
         $form->slotid = required_param('slotid', PARAM_INT);
         $form->what = 'doaddupdateslot';
-    } elseif($subaction != '') {
-        $retcode = include "teacherview.subcontroller.php";
-        if ($retcode == -1) return -1;
+    } else if ($subaction != '') {
+        $retcode = include("teacherview.subcontroller.php");
+        if ($retcode == -1) {
+            return -1;
+        }
     }
-    
+
     // print errors and notices
-    if (!empty($errors)){
+    if (!empty($errors)) {
         $errorstr = '';
-        foreach($errors as $anError){
-            $errorstr .= $anError->message;
+        foreach ($errors as $anerror) {
+            $errorstr .= $anerror->message;
         }
         echo $OUTPUT->box($errorstr, 'center', '70%', '', 5, 'errorbox');
     }
-    
+
     /// print form
     $form->what = 'doaddupdateslot';
-    
+
     echo $OUTPUT->box_start('center', '', '');
     include('oneslotform.html');
     echo $OUTPUT->box_end();
     echo '<br />';
-    
+
     // return code for include
     return -1;
 }
-/************************************ Add session multiple slots form ****************************************/
+
+// Add session multiple slots form
 if ($action == 'addsession') {
     // if there is some error from controller, display it
-    if (!empty($errors)){
+    if (!empty($errors)) {
         $errorstr = '';
-        foreach($errors as $anError){
-            $errorstr .= $anError->message;
+        foreach ($errors as $anerror) {
+            $errorstr .= $anerror->message;
         }
         echo $OUTPUT->box($errorstr, 'center', '70%', '', 5, 'errorbox');
     }
-    
-    if (!empty($errors)){
+
+    if (!empty($errors)) {
         get_session_data($data);
         $form = &$data;
     } else {
@@ -222,30 +241,31 @@ if ($action == 'addsession') {
         $form->saturday = 0;
         $form->sunday = 0;
     }
-    
+
     echo $OUTPUT->heading(get_string('addsession', 'scheduler'));
     echo $OUTPUT->box_start('center', '', '');
     include_once('addslotsform.html');
     echo $OUTPUT->box_end();
     echo '<br />';
-    
+
     // return code for include
     return -1;
 }
-/************************************ Schedule a student form ***********************************************/
+
+// Schedule a student form
 if ($action == 'schedule') {
-    if ($subaction == 'dochooseslot'){
+    if ($subaction == 'dochooseslot') {
         /// set an advice message
         unset($erroritem);
         $erroritem->message = get_string('dontforgetsaveadvice', 'scheduler');
         $erroritem->on = '';
         $errors[] = $erroritem;
-        
+
         $slotid = required_param('slotid', PARAM_INT);
         $studentid = required_param('studentid', PARAM_INT);
-        if ($slot = $DB->get_record('scheduler_slots', array('id'=>$slotid))){
+        if ($slot = $DB->get_record('scheduler_slots', array('id'=>$slotid))) {
             $form = &$slot;
-            
+
             $form->studentid = $studentid;
             $form->what = 'doaddupdateslot';
             $form->slotid = $slotid;
@@ -274,15 +294,15 @@ if ($action == 'schedule') {
             $form->availableslots = scheduler_get_available_slots($studentid, $scheduler->id);
             $form->appointments = unserialize(stripslashes(required_param('appointments', PARAM_RAW)));
         }
-    } elseif($subaction == 'cancel') {
+    } else if ($subaction == 'cancel') {
         get_slot_data($form);
         $form->appointments = unserialize(stripslashes(required_param('appointments', PARAM_RAW)));
         $form->studentid = required_param('studentid', PARAM_INT);
         $form->slotid = required_param('slotid', PARAM_INT);
         $form->availableslots = scheduler_get_available_slots($form->studentid, $scheduler->id);
         $form->what = 'doaddupdateslot';
-    } elseif(empty($subaction)) {
-        if (!empty($errors)){
+    } else if (empty($subaction)) {
+        if (!empty($errors)) {
             get_slot_data($form);
             $form->availableslots = scheduler_get_available_slots($form->studentid, $scheduler->id);
             $form->studentid = required_param('studentid', PARAM_INT);
@@ -291,10 +311,10 @@ if ($action == 'schedule') {
         } else {
             $form->studentid = required_param('studentid', PARAM_INT);
             $form->seen = optional_param('seen', 0, PARAM_INT);
-            
+
             /// getting available slots
             $form->availableslots = scheduler_get_available_slots($form->studentid, $scheduler->id);
-            $form->what = 'doaddupdateslot' ;
+            $form->what = 'doaddupdateslot';
             $form->starttime = time();
             $form->duration = $scheduler->defaultslotduration;
             $form->reuse = 1;
@@ -313,42 +333,45 @@ if ($action == 'schedule') {
             $appointment->timemodified = time();
             $form->appointments[$form->studentid] = $appointment;
         }
-    } elseif($subaction != '') {
-        $retcode = include "teacherview.subcontroller.php";
-        if ($retcode == -1) return -1;
+    } else if ($subaction != '') {
+        $retcode = include("teacherview.subcontroller.php");
+        if ($retcode == -1) {
+            return -1;
+        }
     }
-    
+
     // display error or advices
-    if (!empty($errors)){
+    if (!empty($errors)) {
         $errorstr = '';
-        foreach($errors as $anError){
-            $errorstr .= $anError->message;
+        foreach ($errors as $anerror) {
+            $errorstr .= $anerror->message;
         }
         echo $OUTPUT->box($errorstr, 'center', '70%', '', 5, 'errorbox');
     }
-    
+
     // diplay form
-    $form->student = $DB->get_record('user', array('id'=>$form->studentid));
+    $form->student = $DB->get_record('user', array('id' => $form->studentid));
     $studentname = fullname($form->student, true);
     echo $OUTPUT->heading(get_string('scheduleappointment', 'scheduler', $studentname));
     echo $OUTPUT->box_start('center', '', '');
     include($CFG->dirroot.'/mod/scheduler/oneslotform.html');
     echo $OUTPUT->box_end();
-    
+
     // return code for include
     return -1;
 }
-/************************************ Schedule a whole group in form ***********************************************/
+
+// Schedule a whole group in form
 if ($action == 'schedulegroup') {
-    if($subaction == 'dochooseslot'){
-        /// set an advice message
+    if ($subaction == 'dochooseslot') {
+        // set an advice message
         unset($erroritem);
         $erroritem->message = get_string('dontforgetsaveadvice', 'scheduler');
         $erroritem->on = '';
         $errors[] = $erroritem;
-        
+
         $slotid = required_param('slotid', PARAM_INT);
-        if ($slot = $DB->get_record('scheduler_slots', array('id'=>$slotid))){
+        if ($slot = $DB->get_record('scheduler_slots', array('id'=>$slotid))) {
             $form = &$slot;
             $form->groupid = required_param('groupid', PARAM_INT);
             $form->what = 'doaddupdateslot';
@@ -356,12 +379,12 @@ if ($action == 'schedulegroup') {
             $form->availableslots = scheduler_get_unappointed_slots($scheduler->id);
             $appointments = array();
             $members = groups_get_members($form->groupid);
-            
+
             // add all group members to the slot, and match exclusivity
-            foreach($members as $member){
+            foreach ($members as $member) {
                 unset($appointment);
                 // hack for 1.8 / 1.9 compatibility of groups_get_members() call
-                if (is_numeric($member)){
+                if (is_numeric($member)) {
                     $appointment->studentid = $member;
                 } else {
                     $appointment->studentid = $member->id;
@@ -389,15 +412,15 @@ if ($action == 'schedulegroup') {
             $form->availableslots = scheduler_get_unappointed_slots($scheduler->id);
             $form->appointments = unserialize(stripslashes(required_param('appointments', PARAM_RAW)));
         }
-    } elseif($subaction == 'cancel') {
+    } else if ($subaction == 'cancel') {
         get_slot_data($form);
         $form->appointments = unserialize(stripslashes(required_param('appointments', PARAM_RAW)));
         $form->studentid = required_param('studentid', PARAM_INT);
         $form->slotid = required_param('slotid', PARAM_INT);
         $form->availableslots = scheduler_get_unappointed_slots($scheduler->id);
         $form->what = 'doaddupdateslot';
-    } elseif(empty($subaction)) {
-        if (!empty($errors)){
+    } else if (empty($subaction)) {
+        if (!empty($errors)) {
             get_slot_data($form);
             $form->availableslots = scheduler_get_unappointed_slots($scheduler->id);
             $form->groupid = required_param('groupid', PARAM_INT);
@@ -406,10 +429,10 @@ if ($action == 'schedulegroup') {
         } else {
             $form->groupid = required_param('groupid', PARAM_INT);
             $form->seen = optional_param('seen', 0, PARAM_INT);
-            
+
             /// getting available slots
             $form->availableslots = scheduler_get_unappointed_slots($scheduler->id);
-            $form->what = 'doaddupdateslot' ;
+            $form->what = 'doaddupdateslot';
             $form->starttime = time();
             $form->duration = $scheduler->defaultslotduration;
             $form->reuse = 1;
@@ -420,11 +443,11 @@ if ($action == 'schedulegroup') {
             $form->slotid = 0;
             $members = groups_get_members($form->groupid);
             $form->exclusivity = count($members);
-            foreach($members as $member){
+            foreach ($members as $member) {
                 unset($appointment);
                 $appointment->slotid = -1;
                 // hack for 1.8 / 1.9 compatibility of groups_get_members() call
-                if (is_numeric($member)){
+                if (is_numeric($member)) {
                     $appointment->studentid = $member;
                 } else {
                     $appointment->studentid = $member->id;
@@ -437,39 +460,41 @@ if ($action == 'schedulegroup') {
                 $form->appointments[$appointment->studentid] = $appointment;
             }
         }
-    } elseif($subaction != '') {
-        $retcode = include "teacherview.subcontroller.php";
-        if ($retcode == -1) return -1;
+    } else if ($subaction != '') {
+        $retcode = include("teacherview.subcontroller.php");
+        if ($retcode == -1) {
+            return -1;
+        }
     }
-    
+
     // display error or advices
-    if (!empty($errors)){
+    if (!empty($errors)) {
         $errorstr = '';
-        foreach($errors as $anError){
-            $errorstr .= $anError->message;
+        foreach ($errors as $anerror) {
+            $errorstr .= $anerror->message;
         }
         echo $OUTPUT->box($errorstr, 'center', '70%', '', 5, 'errorbox');
     }
-    
+
     // diplay form
     $form->group = $DB->get_record('groups', array('id'=>$form->groupid));
     echo $OUTPUT->heading(get_string('scheduleappointment', 'scheduler', $form->group->name));
     echo $OUTPUT->box_start('center', '', '');
     include($CFG->dirroot.'/mod/scheduler/oneslotform.html');
     echo $OUTPUT->box_end();
-    
+
     // return code for include
     return -1;
 }
-//****************** Standard view ***********************************************//
 
+// Standard view
 
-/// print top tabs
+// print top tabs
 
 $tabrows = array();
 $row  = array();
 
-switch ($action){
+switch ($action) {
     case 'viewstatistics':{
         $currenttab = get_string('statistics', 'scheduler');
         break;
@@ -522,23 +547,23 @@ if (trim(strip_tags($scheduler->intro))) {
     echo $OUTPUT->box_end();
 }
 
-if ($page == 'allappointments'){
+if ($page == 'allappointments') {
     $select = "schedulerid = '". $scheduler->id ."'";
 } else {
     $select = "schedulerid = '". $scheduler->id ."' AND teacherid = '{$USER->id}'";
     $page = 'myappointments';
 }
-$sqlcount = $DB->count_records_select('scheduler_slots',$select);
+$sqlcount = $DB->count_records_select('scheduler_slots', $select);
 
-if (($offset == '') && ($sqlcount > 25)){
+if (($offset == '') && ($sqlcount > 25)) {
     $offsetcount = $DB->count_records_select('scheduler_slots', $select." AND starttime < '".strtotime('now')."'");
     $offset = floor($offsetcount/25);
 }
 
 
 $slots = $DB->get_records_select('scheduler_slots', $select, null, 'starttime', '*', $offset * 25, 25);
-if ($slots){
-    foreach(array_keys($slots) as $slotid){
+if ($slots) {
+    foreach (array_keys($slots) as $slotid) {
         $slots[$slotid]->isappointed = $DB->count_records('scheduler_appointment', array('slotid'=>$slotid));
         $slots[$slotid]->isattended = $DB->record_exists('scheduler_appointment', array('slotid'=>$slotid, 'attended'=> 1));
     }
@@ -549,11 +574,11 @@ $straddsingleslot = get_string('addsingleslot', 'scheduler');
 $strdownloadexcel = get_string('downloadexcel', 'scheduler');
 
 /// some slots already exist
-if ($slots){
+if ($slots) {
     // print instructions and button for creating slots
     echo $OUTPUT->box_start('center', '', '');
     print_string('addslot', 'scheduler');
-    
+
     // print add session button
     $strdeleteallslots = get_string('deleteallslots', 'scheduler');
     $strdeleteallunusedslots = get_string('deleteallunusedslots', 'scheduler');
@@ -562,13 +587,13 @@ if ($slots){
     $strstudents = get_string('students', 'scheduler');
     $displaydeletebuttons = 1;
     echo '<center>';
-    include $CFG->dirroot.'/mod/scheduler/commands.html';
+    include($CFG->dirroot.'/mod/scheduler/commands.html');
     echo '</center>';
     echo $OUTPUT->box_end();
-    
+
     // prepare slots table
     $table = new html_table();
-    if ($page == 'myappointments'){
+    if ($page == 'myappointments') {
         $table->head  = array ('', $strdate, $strstart, $strend, $strstudents, $straction);
         $table->align = array ('CENTER', 'LEFT', 'LEFT', 'CENTER', 'CENTER', 'CENTER', 'LEFT', 'CENTER');
     } else {
@@ -577,48 +602,47 @@ if ($slots){
     }
     $table->width = '90%';
     $offsetdatemem = '';
-    foreach($slots as $slot) {
+    foreach ($slots as $slot) {
         if (!$slot->isappointed && $slot->starttime + (60 * $slot->duration) < time()) {
             // This slot is in the past and has not been chosen by any student, so delete
             $DB->delete_records('scheduler_slots', array('id'=>$slot->id));
             continue;
         }
-        
+
         /// Parameter $local in scheduler_userdate and scheduler_usertime added by power-web.at
         /// When local Time or Date is needed the $local Param must be set to 1
-        $offsetdate = scheduler_userdate($slot->starttime,1);
-        $offsettime = scheduler_usertime($slot->starttime,1);
-        $endtime = scheduler_usertime($slot->starttime + ($slot->duration * 60),1);
-        
+        $offsetdate = scheduler_userdate($slot->starttime, 1);
+        $offsettime = scheduler_usertime($slot->starttime, 1);
+        $endtime = scheduler_usertime($slot->starttime + ($slot->duration * 60), 1);
+
         /// make a slot select box
-        if ($USER->id == $slot->teacherid || has_capability('mod/scheduler:manageallappointments', $context)){
+        if ($USER->id == $slot->teacherid || has_capability('mod/scheduler:manageallappointments', $context)) {
             $selectcheck = "<input type=\"checkbox\" id=\"sel_{$slot->id}\" name=\"sel_{$slot->id}\" onclick=\"document.forms['deleteslotsform'].items.value = toggleListState(document.forms['deleteslotsform'].items.value, 'sel_{$slot->id}', '{$slot->id}');\" />";
         } else {
             $selectcheck = '';
         }
-        
+
         // slot is appointed
-        $studentArray = array();
+        $studentarray = array();
         if ($slot->isappointed) {
             $appointedstudents = $DB->get_records('scheduler_appointment', array('slotid'=>$slot->id));
-            $studentArray[] = "<form name=\"appointementseen_{$slot->id}\" method=\"post\" action=\"view.php\">";
-            $studentArray[] = "<input type=\"hidden\" name=\"id\" value=\"".$cm->id."\" />";
-            $studentArray[] = "<input type=\"hidden\" name=\"slotid\" value=\"".$slot->id."\" />";
-            $studentArray[] = "<input type=\"hidden\" name=\"what\" value=\"saveseen\" />";
-            $studentArray[] = "<input type=\"hidden\" name=\"page\" value=\"".$page."\" />";
-            foreach($appointedstudents as $appstudent){
+            $studentarray[] = "<form name=\"appointementseen_{$slot->id}\" method=\"post\" action=\"view.php\">";
+            $studentarray[] = "<input type=\"hidden\" name=\"id\" value=\"".$cm->id."\" />";
+            $studentarray[] = "<input type=\"hidden\" name=\"slotid\" value=\"".$slot->id."\" />";
+            $studentarray[] = "<input type=\"hidden\" name=\"what\" value=\"saveseen\" />";
+            $studentarray[] = "<input type=\"hidden\" name=\"page\" value=\"".$page."\" />";
+            foreach ($appointedstudents as $appstudent) {
                 $student = $DB->get_record('user', array('id'=>$appstudent->studentid));
                 if ($student) {
                     $picture = $OUTPUT->user_picture($student);
                     $name = "<a href=\"view.php?what=viewstudent&amp;id={$cm->id}&amp;studentid={$student->id}&amp;course={$scheduler->course}&amp;order=DESC\">".fullname($student).'</a>';
                 }
-                
-                
+
                 /// formatting grade
-                $grade=scheduler_format_grade($scheduler,$appstudent->grade,true);
-                
-                if ($USER->id == $slot->teacherid || has_capability('mod/scheduler:manageallappointments', $context)){
-                    $checked = ($appstudent->attended) ? 'checked="checked"' : '' ;
+                $grade=scheduler_format_grade($scheduler, $appstudent->grade, true);
+
+                if ($USER->id == $slot->teacherid || has_capability('mod/scheduler:manageallappointments', $context)) {
+                    $checked = ($appstudent->attended) ? 'checked="checked"' : '';
                     $checkbox = "<input type=\"checkbox\" name=\"seen[]\" value=\"{$appstudent->id}\" {$checked} />";
                 } else {
                     // same thing but no link
@@ -628,57 +652,57 @@ if ($slots){
                         $checkbox .= '<img src="pix/unticked.gif" border="0">';
                     }
                 }
-                $studentArray[] = "$checkbox $picture $name $grade<br/>";
+                $studentarray[] = "$checkbox $picture $name $grade<br/>";
             }
-            $studentArray[] = "<a href=\"javascript:document.forms['appointementseen_{$slot->id}'].submit();\">".get_string('saveseen','scheduler').'</a>';
-            $studentArray[] = "</form>";
+            $studentarray[] = "<a href=\"javascript:document.forms['appointementseen_{$slot->id}'].submit();\">".get_string('saveseen', 'scheduler').'</a>';
+            $studentarray[] = "</form>";
         } else {
             // slot is free
             $picture = '';
             $name = '';
             $checkbox = '';
         }
-        
+
         $actions = '<span style="font-size: x-small;">';
-        if ($USER->id == $slot->teacherid || has_capability('mod/scheduler:manageallappointments', $context)){
-            
+        if ($USER->id == $slot->teacherid || has_capability('mod/scheduler:manageallappointments', $context)) {
+
             $strdelete = get_string('delete');
-            $stredit = get_string('move','scheduler');
-            $strattended = get_string('attended','scheduler');
+            $stredit = get_string('move', 'scheduler');
+            $strattended = get_string('attended', 'scheduler');
             $strnonexclusive = get_string('isnonexclusive', 'scheduler');
             $strallowgroup = get_string('allowgroup', 'scheduler');
             $strforbidgroup = get_string('forbidgroup', 'scheduler');
             $strrevoke = get_string('revoke', 'scheduler');
             $strreused = get_string('setreused', 'scheduler');
             $strunreused = get_string('setunreused', 'scheduler');
-            
+
             $actions .= "<a href=\"view.php?what=deleteslot&amp;id={$cm->id}&amp;slotid={$slot->id}&amp;page={$page}\" title=\"{$strdelete}\"><img src=\"{$CFG->wwwroot}/pix/t/delete.gif\" alt=\"{$strdelete}\" /></a>";
             $actions .= "&nbsp;<a href=\"view.php?what=updateslot&amp;id={$cm->id}&amp;slotid={$slot->id}&amp;page={$page}\" title=\"{$stredit}\"><img src=\"{$CFG->wwwroot}/pix/t/edit.gif\" alt=\"{$stredit}\" /></a>";
-            if ($slot->isattended){
+            if ($slot->isattended) {
                 $actions .= "&nbsp;<img src=\"{$CFG->wwwroot}/pix/c/group.gif\" title=\"{$strattended}\" />";
             } else {
-                if ($slot->isappointed > 1){
+                if ($slot->isappointed > 1) {
                     $actions .= "&nbsp;<img src=\"{$CFG->wwwroot}/pix/c/group.gif\" title=\"{$strnonexclusive}\" />";
                 } else {
-                    if ($slot->exclusivity == 1){
+                    if ($slot->exclusivity == 1) {
                         $actions .= "&nbsp;<a href=\"view.php?what=allowgroup&amp;id={$cm->id}&amp;slotid={$slot->id}&amp;page={$page}\" title=\"{$strallowgroup}\"><img src=\"{$CFG->wwwroot}/pix/t/groupn.gif\" alt=\"{$strallowgroup}\" /></a>";
                     } else {
                         $actions .= "&nbsp;<a href=\"view.php?what=forbidgroup&amp;id={$cm->id}&amp;slotid={$slot->id}&amp;page={$page}\" title=\"{$strforbidgroup}\"><img src=\"{$CFG->wwwroot}/pix/t/groupv.gif\" alt=\"{$strforbidgroup}\" /></a>";
                     }
                 }
             }
-            if ($slot->isappointed){
+            if ($slot->isappointed) {
                 $actions .= "&nbsp;<a href=\"view.php?what=revokeall&amp;id={$cm->id}&amp;slotid={$slot->id}&amp;page={$page}\" title=\"{$strrevoke}\"><img src=\"{$CFG->wwwroot}/pix/s/no.gif\" alt=\"{$strrevoke}\" /></a>";
             }
         } else {
             // just signal group status
-            if ($slot->isattended){
+            if ($slot->isattended) {
                 $actions .= "&nbsp;<img src=\"{$CFG->wwwroot}/pix/c/group.gif\" title=\"{$strattended}\" />";
             } else {
-                if ($slot->isappointed > 1){
+                if ($slot->isappointed > 1) {
                     $actions .= "&nbsp;<img src=\"{$CFG->wwwroot}/pix/c/group.gif\" title=\"{$strnonexclusive}\" />";
                 } else {
-                    if ($slot->exclusivity == 1){
+                    if ($slot->exclusivity == 1) {
                         $actions .= "&nbsp;<img src=\"{$CFG->wwwroot}/pix/t/groupn.gif\" title=\"{$strallowgroup}\" />";
                     } else {
                         $actions .= "&nbsp;<img src=\"{$CFG->wwwroot}/pix/t/groupv.gif\" title=\"{$strforbidgroup}\" />";
@@ -686,26 +710,26 @@ if ($slots){
                 }
             }
         }
-        if ($slot->exclusivity > 1){
+        if ($slot->exclusivity > 1) {
             $actions .= ' ('.$slot->exclusivity.')';
         }
-        if ($slot->reuse){
+        if ($slot->reuse) {
             $actions .= "&nbsp;<a href=\"view.php?what=unreuse&amp;id={$cm->id}&amp;slotid={$slot->id}&amp;page={$page}\" title=\"{$strunreused}\" ><img src=\"pix/volatile_shadow.gif\" alt=\"{$strunreused}\" border=\"0\" /></a>";
         } else {
             $actions .= "&nbsp;<a href=\"view.php?what=reuse&amp;id={$cm->id}&amp;slotid={$slot->id}&amp;page={$page}\" title=\"{$strreused}\" ><img src=\"pix/volatile.gif\" alt=\"{$strreused}\" border=\"0\" /></a>";
         }
         $actions .= '</span>';
-        if($page == 'myappointments'){
-            $table->data[] = array ($selectcheck, ($offsetdate == $offsetdatemem) ? '' : $offsetdate, $offsettime, $endtime, implode("\n",$studentArray), $actions);
+        if ($page == 'myappointments') {
+            $table->data[] = array ($selectcheck, ($offsetdate == $offsetdatemem) ? '' : $offsetdate, $offsettime, $endtime, implode("\n", $studentarray), $actions);
         } else {
-            $teacherlink = "<a href=\"$CFG->wwwroot/user/view.php?id={$slot->teacherid}\">".fullname($DB->get_record('user', array('id'=> $slot->teacherid)))."</a>";
-            $table->data[] = array ($selectcheck, ($offsetdate == $offsetdatemem) ? '' : $offsetdate, $offsettime, $endtime, implode("\n",$studentArray), $teacherlink, $actions);
+            $teacherlink = "<a href=\"$CFG->wwwroot/user/view.php?id={$slot->teacherid}\">".fullname($DB->get_record('user', array('id' => $slot->teacherid)))."</a>";
+            $table->data[] = array ($selectcheck, ($offsetdate == $offsetdatemem) ? '' : $offsetdate, $offsettime, $endtime, implode("\n", $studentarray), $teacherlink, $actions);
         }
         $offsetdatemem = $offsetdate;
     }
-    
+
     // print slots table
-    echo $OUTPUT->heading(get_string('slots' ,'scheduler'));
+    echo $OUTPUT->heading(get_string('slots', 'scheduler'));
     echo html_writer::table($table);
     ?>
 <center>
@@ -719,18 +743,18 @@ if ($slots){
             <input type="hidden" name="what" value="deleteslots" />
             <input type="hidden" name="items" value="" />
             </form>
-            <a href="javascript:document.forms['deleteslotsform'].submit()"><?php print_string('deleteselection','scheduler') ?></a>
+            <a href="javascript:document.forms['deleteslotsform'].submit()"><?php print_string('deleteselection', 'scheduler') ?></a>
             <br />
         </td>
     </tr>
 </table>
 
 <?php
-if ($sqlcount > 25){
+if ($sqlcount > 25) {
     echo "Page : ";
     $pagescount = ceil($sqlcount/25);
-    for ($n = 0; $n < $pagescount; $n ++){
-        if ($n == $offset){
+    for ($n = 0; $n < $pagescount; $n ++) {
+        if ($n == $offset) {
             echo ($n+1).' ';
         } else {
             echo "<a href=view.php?id={$cm->id}&amp;page={$page}&amp;offset={$n}>".($n+1)."</a> ";
@@ -749,7 +773,7 @@ echo '<br /><center>' . get_string('markseen', 'scheduler') . '</center>';
     print_string('welcomenewteacher', 'scheduler');
     echo '<center>';
     $displaydeletebuttons = 0;
-    include "commands.html";
+    include("commands.html");
     echo '</center>';
     echo $OUTPUT->box_end();
 }
@@ -763,30 +787,30 @@ echo '<br /><center>' . get_string('markseen', 'scheduler') . '</center>';
 <?php
 echo $OUTPUT->heading(get_string('schedulestudents', 'scheduler'));
 
-$students = scheduler_get_possible_attendees($cm, $usergroups); 
+$students = scheduler_get_possible_attendees($cm, $usergroups);
 if (!$students) {
-    $nostudentstr = get_string('noexistingstudents','scheduler');
-    if ($COURSE->id == SITEID){
-        $nostudentstr .= '<br/>'.get_string('howtoaddstudents','scheduler');
+    $nostudentstr = get_string('noexistingstudents', 'scheduler');
+    if ($COURSE->id == SITEID) {
+        $nostudentstr .= '<br/>'.get_string('howtoaddstudents', 'scheduler');
     }
     echo $OUTPUT->notification($nostudentstr);
 } else {
     $mtable = new html_table();
-    
+
     // build table header
     $mtable->head  = array ('', $strname);
-    $mtable->align = array ('CENTER','LEFT');
+    $mtable->align = array ('CENTER', 'LEFT');
     $extrafields = scheduler_get_user_fields(null);
-	foreach ($extrafields as $field) {
-    	$mtable->head[] = $field->title;
-    	$mtable->align[] = 'LEFT';	    
-	}    
+    foreach ($extrafields as $field) {
+        $mtable->head[] = $field->title;
+        $mtable->align[] = 'LEFT';
+    }
     $mtable->head[] = $strseen;
     $mtable->align[] = 'CENTER';
     $mtable->head[] = $straction;
     $mtable->align[] = 'CENTER';
     // end table header
-    
+
     $mtable->data = array();
     // In $mailto the mailing list for reminder emails is built up
     $mailto = '<a href="mailto:';
@@ -800,24 +824,24 @@ if (!$students) {
             $name = "<a href=\"../../user/view.php?id={$student->id}&amp;course={$scheduler->course}\">";
             $name .= fullname($student);
             $name .= '</a>';
-            if (scheduler_has_slot($student->id, $scheduler, true, false) == 0){
+            if (scheduler_has_slot($student->id, $scheduler, true, false) == 0) {
                 // student has never scheduled
                 $mailto .= $student->email.', ';
                 $maillist[] = $student->email; // constructing list of email addresses to be shown later
             }
-            
-            
+
+
             $checkbox = "<a href=\"view.php?what=schedule&amp;id={$cm->id}&amp;studentid={$student->id}&amp;page={$page}&amp;seen=1\">";
             $checkbox .= '<img src="pix/unticked.gif" border="0" />';
             $checkbox .= '</a>';
-            
+
             $args['what'] = 'schedule';
             $args['id'] = $cm->id;
             $args['studentid'] = $student->id;
             $args['page'] = $page;
-            $url = new moodle_url('view.php',$args);
-            $actions = $OUTPUT->single_button($url, get_string('schedule','scheduler'));
-            
+            $url = new moodle_url('view.php', $args);
+            $actions = $OUTPUT->single_button($url, get_string('schedule', 'scheduler'));
+
             $starttimenow = time();
             $appointment = new stdClass();
             $appointment->slotid = -1;
@@ -830,7 +854,7 @@ if (!$students) {
             $appointment->timemodified = time();
             $appointmentarr = array($appointment);
             $appointmentser = serialize($appointmentarr);
-            
+
             $args['what'] = 'doaddupdateslot';
             $args['id'] = $cm->id;
             $args['teacherid'] = $USER->id;
@@ -843,55 +867,55 @@ if (!$students) {
             $args['exclusivity'] = '1';
             $args['reuse'] = '0';
             $args['notes'] = '';
-            $url = new moodle_url('view.php',$args);
-            $actions .= $OUTPUT->single_button($url, get_string('markasseennow','scheduler'));
-            
+            $url = new moodle_url('view.php', $args);
+            $actions .= $OUTPUT->single_button($url, get_string('markasseennow', 'scheduler'));
+
             $newdata = array($picture, $name);
             $extrafields = scheduler_get_user_fields($student);
             foreach ($extrafields as $field) {
                 $newdata[] = $field->value;
-            }                
+            }
             $newdata[] = $checkbox;
-            $newdata[] = $actions; 
+            $newdata[] = $actions;
             $mtable->data[] = $newdata;
         }
     }
-    
+
     // dont print if allowed to book multiple appointments
     // There are students who still have to make appointments
     if (($num = count($mtable->data)) > 0) {
-        
+
         // Print number of students who still have to make an appointment
         echo $OUTPUT->heading(get_string('missingstudents', 'scheduler', $num), 3);
-        
+
         // Print links to print invitation or reminder emails
         $strinvitation = get_string('invitation', 'scheduler');
         $strreminder = get_string('reminder', 'scheduler');
         $mailto = rtrim($mailto, ', ');
-        
+
         $subject = $strinvitation . ': ' . $scheduler->name;
         $body = $strinvitation . ': ' . $scheduler->name . "\n\n";
         $body .= get_string('invitationtext', 'scheduler');
         $body .= "{$CFG->wwwroot}/mod/scheduler/view.php?id={$cm->id}";
         $maildisplay = '<center>';
         if ($CFG->scheduler_showemailplain) {
-        	$maildisplay .= '<p>'.implode(', ', $maillist).'</p>';
+            $maildisplay .= '<p>'.implode(', ', $maillist).'</p>';
         }
-        $maildisplay .= get_string('composeemail', 'scheduler'). 
+        $maildisplay .= get_string('composeemail', 'scheduler').
             $mailto.'?subject='.htmlentities(rawurlencode($subject)).
             '&amp;body='.htmlentities(rawurlencode($body)).
             '"> '.$strinvitation.'</a> ';
         $maildisplay .= ' &mdash; ';
-        
+
         $subject = $strreminder . ': ' . $scheduler->name;
         $body = $strreminder . ': ' . $scheduler->name . "\n\n";
         $body .= get_string('remindertext', 'scheduler');
         $body .= "{$CFG->wwwroot}/mod/scheduler/view.php?id={$cm->id}";
-        $maildisplay .= $mailto.'?subject='.htmlentities(rawurlencode($subject)). 
+        $maildisplay .= $mailto.'?subject='.htmlentities(rawurlencode($subject)).
             '&amp;body='.htmlentities(rawurlencode($body)).
             '"> '.$strreminder.'</a></center>';
-        echo $OUTPUT->box($maildisplay); 
-        
+        echo $OUTPUT->box($maildisplay);
+
         // print table of students who still have to make appointments
         echo html_writer::table($mtable);
     } else {
@@ -901,7 +925,7 @@ if (!$students) {
 ?>
         </td>
 <?php
-if (scheduler_group_scheduling_enabled($course, $cm)){
+if (scheduler_group_scheduling_enabled($course, $cm)) {
     ?>
         <td width="50%">
 <?php
@@ -910,22 +934,24 @@ if (scheduler_group_scheduling_enabled($course, $cm)){
 
 echo $OUTPUT->heading(get_string('schedulegroups', 'scheduler'));
 
-if (empty($groups)){
+if (empty($groups)) {
     echo $OUTPUT->notification(get_string('nogroups', 'scheduler'));
 } else {
-	$mtable = new html_table();
+    $mtable = new html_table();
     $mtable->head  = array ('', $strname, $straction);
     $mtable->align = array ('CENTER', 'LEFT', 'CENTER');
-    foreach($groups as $group) {
+    foreach ($groups as $group) {
         $members = groups_get_members($group->id, 'u.id, lastname, firstname, email, picture', 'lastname, firstname');
-        if (empty($members)) continue;
+        if (empty($members)) {
+            continue;
+        }
         if (!scheduler_has_slot(implode(',', array_keys($members)), $scheduler, true, $scheduler->schedulermode == 'onetime')) {
             $actions = '';
             $actions .= "<a href=\"view.php?what=schedulegroup&amp;id={$cm->id}&amp;groupid={$group->id}&amp;page={$page}\">";
             $actions .= get_string('schedule', 'scheduler');
             $actions .= '</a>';
             $groupmembers = array();
-            foreach($members as $member){
+            foreach ($members as $member) {
                 $groupmembers[] = fullname($member);
             }
             $groupcrew = '['. implode(", ", $groupmembers) . ']';
@@ -933,7 +959,7 @@ if (empty($groups)){
         }
     }
     // print table of students who still have to make appointments
-    if (!empty($mtable->data)){
+    if (!empty($mtable->data)) {
         echo html_writer::table($mtable);
     } else {
         echo $OUTPUT->notification(get_string('nogroups', 'scheduler'));

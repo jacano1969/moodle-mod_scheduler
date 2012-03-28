@@ -1,4 +1,19 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
 $string['pluginname'] = 'Scheduler';
 $string['pluginadministration'] = 'Scheduler administration';
 
@@ -255,7 +270,7 @@ $string['yourslotnotes'] = 'Comments on the meeting';
 
 $string['forcewhenoverlap_help']='
 <h3>Forcing slots addition through a session</h3>
-<p>This control allows forcing the addition of slots when the session conflicts with other slots. 
+<p>This control allows forcing the addition of slots when the session conflicts with other slots.
 In that case, only "clean" slots will be added. Conflicting will be ignored.</p>
 
 <p>
@@ -271,7 +286,7 @@ $string['appointmentmode'] = 'Setting the appointment mode';
 $string['appointmentmode_help']='<p>You may choose here some variants in the way appointments can be taken. </p>
 <p><ul>
 <li><b>"One single appointment" mode:</b> The student can only have a single appointment in this module. Once it has been seen by the teacher, he will not be allowed to apply for any further meeting. The only way to reset ability of a student to apply is to delete the old "seen" records.</li>
-<li><b>"One at a time" mode:</b> The student can apply only to one (future) date. Once the meeting is over and concluded, he can appoint back. this mode is usefull to arbitrate project appointments on long run projects, specially when multiple phases of appointements are to be offered. 
+<li><b>"One at a time" mode:</b> The student can apply only to one (future) date. Once the meeting is over and concluded, he can appoint back. this mode is usefull to arbitrate project appointments on long run projects, specially when multiple phases of appointements are to be offered.
 </li>
 </ul>
 </p>';
@@ -290,7 +305,7 @@ $string['exclusivity_help']='<p>You can set a limit on the amount of students th
 </p>';
 
 $string['forcewhenoverlap_help']='
-<p>This control allows forcing the addition of slots when the session conflicts with other slots. 
+<p>This control allows forcing the addition of slots when the session conflicts with other slots.
 In that case, only "clean" slots will be added. Conflicting will be ignored.</p>
 
 <p>If not used, the addition procedure will block when overlapping are detected, and you will asked for
@@ -318,7 +333,7 @@ The label for the role who attends students. This is not necessarily a "teacher"
 /* ***********  E-mail templates from here on ************ */
 
 $string['email_applied_subject'] = '{$a->course_short}: New appointment';
-$string['email_applied_plain'] = 'An appointment has been applied for on {$a->date} at {$a->time}, 
+$string['email_applied_plain'] = 'An appointment has been applied for on {$a->date} at {$a->time},
 by the student {$a->attendee} for the course:
 
 {$a->course_short}: {$a->course}
@@ -334,7 +349,7 @@ by the student <a href="{$a->attendee_url}">{$a->attendee}</a> for the course:
 
 $string['email_cancelled_subject'] = '{$a->course_short}: Appointment cancelled or moved by a student';
 
-$string['email_cancelled_plain'] = 'Your appointment on  {$a->date} at {$a->time}, 
+$string['email_cancelled_plain'] = 'Your appointment on  {$a->date} at {$a->time},
 with the student {$a->attendee} for course:
 
 {$a->course_short} : {$a->course}
@@ -343,7 +358,7 @@ in the scheduler titled "{$a->module}" on the website : {$a->site}
 
 has been cancelled or moved.';
 
-$string['email_cancelled_html'] = '<p>Your appointment on <b>{$a->date}</b> at <b>{$a->time}</b>,<br/> 
+$string['email_cancelled_html'] = '<p>Your appointment on <b>{$a->date}</b> at <b>{$a->time}</b>,<br/>
 with the student <b><a href="{$a->attendee_url}">{$a->attendee}</a></b> for course :</p>
 
 <p><b>{$a->course_short} : <a href="{$a->course_url}">{$a->course}</a></b></p>
@@ -354,21 +369,21 @@ with the student <b><a href="{$a->attendee_url}">{$a->attendee}</a></b> for cour
 
 $string['email_reminder_subject'] = '{$a->course_short}: Appointment reminder';
 
-$string['email_reminder_plain'] = 'You have an upcoming appointment 
+$string['email_reminder_plain'] = 'You have an upcoming appointment
 on {$a->date} from {$a->time} to {$a->endtime}
 with {$a->attendant}.
 
 Location: {$a->location}';
 
-$string['email_reminder_html'] = '<p>You have an upcoming appointment on <b>{$a->date}</b> 
-from <b>{$a->time}</b> to <b>{$a->endtime}</b><br/> 
+$string['email_reminder_html'] = '<p>You have an upcoming appointment on <b>{$a->date}</b>
+from <b>{$a->time}</b> to <b>{$a->endtime}</b><br/>
 with <b><a href="{$a->attendant_url}">{$a->attendant}</a></b>.</p>
 
 <p>Location: <b>{$a->location}</b></p>';
 
 $string['email_teachercancelled_subject'] = '{$a->course_short}: Appointment cancelled by the teacher';
 
-$string['email_teachercancelled_plain'] = 'Your appointment on {$a->date} at {$a->time}, 
+$string['email_teachercancelled_plain'] = 'Your appointment on {$a->date} at {$a->time},
 with the {$a->staffrole} {$a->attendant} for course:
 
 {$a->course_short}: {$a->course}
@@ -377,7 +392,7 @@ in the scheduler titled "{$a->module}" on the website: {$a->site}
 
 has been cancelled. Please apply for a new slot.';
 
-$string['email_teachercancelled_html'] = '<p>Your appointment on <b>{$a->date}</b> at <b>{$a->time} </b>,<br/> 
+$string['email_teachercancelled_html'] = '<p>Your appointment on <b>{$a->date}</b> at <b>{$a->time} </b>,<br/>
 with the {$a->staffrole} <b><a href="{$a->attendant_url}">{$a->attendant}</a></b> for course:</p>
 
 <p><b>{$a->course_short}: <a href="{$a->course_url}">{$a->course}</a></b></p>

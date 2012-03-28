@@ -1,8 +1,22 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * Controller for some sub-screens of teacher related use cases.
- * 
+ *
  * @package    mod
  * @subpackage scheduler
  * @copyright  2011 Henning Bostelmann and others (see README.txt)
@@ -11,7 +25,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-switch($subaction){
+switch ($subaction) {
     case 'addappointed':
         get_slot_data($form);
         $form->what = $action;
@@ -33,7 +47,7 @@ switch($subaction){
     case 'updateappointed':
         $studentid = required_param('studentid', PARAM_INT);
         $form->what = $action;
-    
+
         get_slot_data($form);
         $form->appointments = unserialize(stripslashes(optional_param('appointments', '', PARAM_RAW)));
         $form->appointmentssaved = unserialize(stripslashes(optional_param('appointments', '', PARAM_RAW)));
@@ -42,18 +56,18 @@ switch($subaction){
         $form->attended = $form->appointments[$studentid]->attended;
         $form->grade = $form->appointments[$studentid]->grade;
         $form->appointmentnote = $form->appointments[$studentid]->appointmentnote;
-    
+
         // play again this appointment
         unset($form->appointments[$studentid]);
-    
+
         echo $OUTPUT->heading(get_string('updatingappointment', 'scheduler'),  3, 'center');
         echo $OUTPUT->box_start('center', '', '');
         include($CFG->dirroot.'/mod/scheduler/appoint.html');
         echo $OUTPUT->box_end();
-        
+
         // return code for include
         return -1;
-        
+
     case 'doremoveappointed':
         unset($erroritem);
         $erroritem->message = get_string('dontforgetsaveadvice', 'scheduler');
@@ -63,14 +77,14 @@ switch($subaction){
         get_slot_data($form);
         $form->what = 'doaddupdateslot';
         $form->studentid = optional_param('studentid', '', PARAM_INT);
-        if (!empty($form->studentid)){
+        if (!empty($form->studentid)) {
             $form->appointments = unserialize(stripslashes(optional_param('appointments', '', PARAM_RAW)));
             unset($form->appointments[$form->studentid]);
-        }        
-        $form->availableslots = scheduler_get_available_slots($form->studentid, $scheduler->id);            
+        }
+        $form->availableslots = scheduler_get_available_slots($form->studentid, $scheduler->id);
         $form->slotid = optional_param('slotid', -1, PARAM_INT);
         break;
-    
+
     case 'doaddappointed':
         unset($erroritem);
         $erroritem->message = get_string('dontforgetsaveadvice', 'scheduler');
@@ -81,9 +95,9 @@ switch($subaction){
         $form->what = 'doaddupdateslot';
         $form->appointments = unserialize(stripslashes(required_param('appointments', PARAM_RAW)));
         $form->slotid = optional_param('slotid', -1, PARAM_INT);
-        
+
         $form->studentid = $appointment->studentid = required_param('studenttoadd', PARAM_INT);
-        $form->availableslots = scheduler_get_available_slots($form->studentid, $scheduler->id);            
+        $form->availableslots = scheduler_get_available_slots($form->studentid, $scheduler->id);
         $appointment->attended = optional_param('attended', 0, PARAM_INT);
         $appointment->appointmentnote = optional_param('appointmentnote', '', PARAM_TEXT);
         $appointment->grade = optional_param('grade', 0, PARAM_CLEAN);
@@ -92,4 +106,3 @@ switch($subaction){
         $form->appointments[$appointment->studentid] = $appointment;
         break;
 }
-?>

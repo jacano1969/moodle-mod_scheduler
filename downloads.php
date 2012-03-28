@@ -1,38 +1,51 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * Exports the scheduler data in spreadsheet format.
- * 
+ *
  * @package    mod
  * @subpackage scheduler
  * @copyright  2011 Henning Bostelmann and others (see README.txt)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-
-/************************************ ODS (OpenOffice Sheet) download generator ******************************/
-if ($action == 'downloadods'){
+// ODS (OpenOffice Sheet) download generator
+if ($action == 'downloadods') {
     require_once($CFG->libdir."/odslib.class.php");
-    /// Calculate file name
+    // Calculate file name
     $downloadfilename = clean_filename("{$course->shortname}_{$scheduler->name}.ods");
-    /// Creating a workbook
+    // Creating a workbook
     $workbook = new MoodleODSWorkbook("-");
 }
-/************************************ Excel download generator ***********************************************/
-if ($action == 'downloadexcel'){
+// Excel download generator
+if ($action == 'downloadexcel') {
     require_once($CFG->libdir."/excellib.class.php");
-    
-    /// Calculate file name
+
+    // Calculate file name
     $downloadfilename = clean_filename(shorten_text("{$course->shortname}_{$scheduler->name}", 20).".xls");
-    /// Creating a workbook
+    // Creating a workbook
     $workbook = new MoodleExcelWorkbook("-");
 }
-if($action == 'downloadexcel' || $action == 'downloadods'){
-    
-    /// Sending HTTP headers
+if ($action == 'downloadexcel' || $action == 'downloadods') {
+
+    // Sending HTTP headers
     $workbook->send($downloadfilename);
-    
-    /// Prepare data
+
+    // Prepare data
     $sql = "
         SELECT DISTINCT
         u.id,
@@ -49,86 +62,85 @@ if($action == 'downloadexcel' || $action == 'downloadods'){
         ";
     $teachers = $DB->get_records_sql($sql, array($scheduler->id));
     $slots = $DB->get_records('scheduler_slots', array('schedulerid' => $scheduler->id), 'starttime', 'id, starttime, duration, exclusivity, teacherid, hideuntil');
-    if ($subaction == 'singlesheet'){
-        /// Adding the worksheet
+    if ($subaction == 'singlesheet') {
+        // Adding the worksheet
         $myxls['singlesheet'] =& $workbook->add_worksheet($COURSE->shortname.': '.format_string($scheduler->name));
-        $myxls['singlesheet']->write_string(0,0,get_string('date', 'scheduler'));
-        $myxls['singlesheet']->write_string(0,1,get_string('starttime', 'scheduler'));
-        $myxls['singlesheet']->write_string(0,2,get_string('endtime', 'scheduler'));
-        $myxls['singlesheet']->write_string(0,3,get_string('slottype', 'scheduler'));
-        $myxls['singlesheet']->write_string(0,4,scheduler_get_teacher_name($scheduler));
-        $myxls['singlesheet']->write_string(0,5,get_string('students', 'scheduler'));
-        $myxls['singlesheet']->set_column(0,0,26);
-        $myxls['singlesheet']->set_column(1,2,15);
-        $myxls['singlesheet']->set_column(3,3,10);
-        $myxls['singlesheet']->set_column(4,4,20);
-        $myxls['singlesheet']->set_column(5,5,60);
+        $myxls['singlesheet']->write_string(0, 0, get_string('date', 'scheduler'));
+        $myxls['singlesheet']->write_string(0, 1, get_string('starttime', 'scheduler'));
+        $myxls['singlesheet']->write_string(0, 2, get_string('endtime', 'scheduler'));
+        $myxls['singlesheet']->write_string(0, 3, get_string('slottype', 'scheduler'));
+        $myxls['singlesheet']->write_string(0, 4, scheduler_get_teacher_name($scheduler));
+        $myxls['singlesheet']->write_string(0, 5, get_string('students', 'scheduler'));
+        $myxls['singlesheet']->set_column(0, 0, 26);
+        $myxls['singlesheet']->set_column(1, 2, 15);
+        $myxls['singlesheet']->set_column(3, 3, 10);
+        $myxls['singlesheet']->set_column(4, 4, 20);
+        $myxls['singlesheet']->set_column(5, 5, 60);
         $f = $workbook->add_format(array('bold' => 1));
-        $myxls['singlesheet']->set_row(0,13,$f);        
-    }
-    elseif ($subaction == 'byteacher') {
-        /// Adding the worksheets
-        if ($teachers){
-            foreach($teachers as $teacher){
+        $myxls['singlesheet']->set_row(0, 13, $f);
+    } else if ($subaction == 'byteacher') {
+        // Adding the worksheets
+        if ($teachers) {
+            foreach ($teachers as $teacher) {
                 $myxls[$teacher->id] =& $workbook->add_worksheet(fullname($teacher));
-                /// Print names of all the fields
-                $myxls[$teacher->id]->write_string(0,0,get_string('date', 'scheduler'));
-                $myxls[$teacher->id]->write_string(0,1,get_string('starttime', 'scheduler'));
-                $myxls[$teacher->id]->write_string(0,2,get_string('endtime', 'scheduler'));
-                $myxls[$teacher->id]->write_string(0,3,get_string('slottype', 'scheduler'));
-                $myxls[$teacher->id]->write_string(0,4,get_string('students', 'scheduler'));
-                $myxls[$teacher->id]->set_column(0,0,26);
-                $myxls[$teacher->id]->set_column(1,2,15);
-                $myxls[$teacher->id]->set_column(3,3,10);
-                $myxls[$teacher->id]->set_column(4,4,60);
+                // Print names of all the fields
+                $myxls[$teacher->id]->write_string(0, 0, get_string('date', 'scheduler'));
+                $myxls[$teacher->id]->write_string(0, 1, get_string('starttime', 'scheduler'));
+                $myxls[$teacher->id]->write_string(0, 2, get_string('endtime', 'scheduler'));
+                $myxls[$teacher->id]->write_string(0, 3, get_string('slottype', 'scheduler'));
+                $myxls[$teacher->id]->write_string(0, 4, get_string('students', 'scheduler'));
+                $myxls[$teacher->id]->set_column(0, 0, 26);
+                $myxls[$teacher->id]->set_column(1, 2, 15);
+                $myxls[$teacher->id]->set_column(3, 3, 10);
+                $myxls[$teacher->id]->set_column(4, 4, 60);
                 $f = $workbook->add_format(array('bold' => 1));
-                $myxls[$teacher->id]->set_row(0,13,$f);        
+                $myxls[$teacher->id]->set_row(0, 13, $f);
             }
         }
     }
-    
-    /// Print all the lines of data.
-    $i = array();    
-    
+
+    // Print all the lines of data.
+    $i = array();
+
     if (!empty($slots)) {
         foreach ($slots as $slot) {
             switch($subaction){
                 case 'byteacher':
-                    $sheetname = $slot->teacherid ;
+                    $sheetname = $slot->teacherid;
                     break;
                 default :
                     $sheetname = $subaction;
             }
-            
+
             $appointments = $DB->get_records('scheduler_appointment', array('slotid' => $slot->id));
-            
-            /// fill slot data
-            $datestart = scheduler_userdate($slot->starttime,1);
-            $timestart = scheduler_usertime($slot->starttime,1);
-            $timeend = scheduler_usertime($slot->starttime + $slot->duration * 60,1);
+
+            // fill slot data
+            $datestart = scheduler_userdate($slot->starttime, 1);
+            $timestart = scheduler_usertime($slot->starttime, 1);
+            $timeend = scheduler_usertime($slot->starttime + $slot->duration * 60, 1);
             $i[$sheetname] = @$i[$sheetname] + 1;
-            $myxls[$sheetname]->write_string($i[$sheetname],0,$datestart);
-            $myxls[$sheetname]->write_string($i[$sheetname],1,$timestart);
-            $myxls[$sheetname]->write_string($i[$sheetname],2,$timeend);
-            switch($slot->exclusivity){
-                case 0 : 
+            $myxls[$sheetname]->write_string($i[$sheetname], 0, $datestart);
+            $myxls[$sheetname]->write_string($i[$sheetname], 1, $timestart);
+            $myxls[$sheetname]->write_string($i[$sheetname], 2, $timeend);
+            switch ($slot->exclusivity) {
+                case 0 :
                     $myxls[$sheetname]->write_string($i[$sheetname], 3, get_string('unlimited', 'scheduler'));
                     break;
                 case 1 :
                     $myxls[$sheetname]->write_string($i[$sheetname], 3, get_string('exclusive', 'scheduler'));
                     break;
                 default :
-                	$remaining = ($slot->exclusivity - count($appointments));
-                    $myxls[$sheetname]->write_string($i[$sheetname], 3, get_string('limited', 'scheduler',$remaining));
+                    $remaining = ($slot->exclusivity - count($appointments));
+                    $myxls[$sheetname]->write_string($i[$sheetname], 3, get_string('limited', 'scheduler', $remaining));
             }
             $j = 4;
-            if ($subaction == 'singlesheet'){
+            if ($subaction == 'singlesheet') {
                 $myxls[$sheetname]->write_string($i[$sheetname], $j, fullname($teachers[$slot->teacherid]));
                 $j++;
             }
             if (!empty($appointments)) {
                 $appointedlist = '';
-                foreach($appointments as $appointment){
+                foreach ($appointments as $appointment) {
                     $user = $DB->get_record('user', array('id' => $appointment->studentid), 'id,firstname,lastname');
                     $user->lastname = strtoupper($user->lastname);
                     $strattended = ($appointment->attended) ? ' (A) ': '';
@@ -138,27 +150,27 @@ if($action == 'downloadexcel' || $action == 'downloadods'){
             }
         }
     }
-    
-    /// Close the workbook
+
+    // Close the workbook
     $workbook->close();
-    exit;    
+    exit;
 }
-/********************************************* csv generator : get parms ************************************/
-if ($action == 'dodownloadcsv'){
+// csv generator : get parms
+if ($action == 'dodownloadcsv') {
     print_header_simple($scheduler->name, '',
-        "<a href=\"index.php?id={$course->id}\">{$strschedulers}</a> -> 
-        <a href=\"view.php?id={$cm->id}&amp;page={$page}\">".format_string($scheduler->name)."</a> -> ".get_string('csvparms', 'scheduler'), 
-        '', '', true, update_module_button($cm->id, $course->id, $strscheduler), 
+        "<a href=\"index.php?id={$course->id}\">{$strschedulers}</a> ->
+        <a href=\"view.php?id={$cm->id}&amp;page={$page}\">".format_string($scheduler->name)."</a> -> ".get_string('csvparms', 'scheduler'),
+        '', '', true, update_module_button($cm->id, $course->id, $strscheduler),
         navmenu($course, $cm));
-    
+
     echo '<link rel="stylesheet" href="'.$CFG->wwwroot.'/mod/scheduler/scheduler.css" type="text/css" />';
     echo '<link rel="stylesheet" href="'.$CFG->themewww.'/standard/scheduler.css" type="text/css" />';
     echo '<link rel="stylesheet" href="'.$CFG->themewww.'/'.current_theme().'/scheduler.css" type="text/css" />';
-    ?>
+?>
 <center>
-<?php 
+<?php
 echo $OUTPUT->heading(get_string('csvparms', 'scheduler'));
-echo $OUTPUT->box_start() 
+echo $OUTPUT->box_start()
 ?>
 <form name="csvparms" method="POST" action="view.php" target="_blank">
 <input type="hidden" name="id" value="<?php p($cm->id) ?>" />
@@ -167,7 +179,7 @@ echo $OUTPUT->box_start()
 <input type="hidden" name="subaction" value="<?php p($subaction) ?>" />
 <table>
     <tr>
-        <td align="right" valign="top"><b><?php print_string('csvrecordseparator','scheduler') ?>:</b></td>
+        <td align="right" valign="top"><b><?php print_string('csvrecordseparator', 'scheduler') ?>:</b></td>
         <td align="left" valign="top">
             <select name="csvrecordseparator">
                 <option value="CR">[CR] (\r) - OLD MAC</option>
@@ -177,7 +189,7 @@ echo $OUTPUT->box_start()
         </td>
     </tr>
     <tr>
-        <td align="right" valign="top"><b><?php print_string('csvfieldseparator','scheduler') ?>:</b></td>
+        <td align="right" valign="top"><b><?php print_string('csvfieldseparator', 'scheduler') ?>:</b></td>
         <td align="left" valign="top">
             <select name="csvfieldseparator">
                 <option value="TAB">[TAB]</option>
@@ -187,7 +199,7 @@ echo $OUTPUT->box_start()
         </td>
     </tr>
     <tr>
-        <td align="right" valign="top"><b><?php print_string('csvencoding','scheduler') ?>:</b></td>
+        <td align="right" valign="top"><b><?php print_string('csvencoding', 'scheduler') ?>:</b></td>
         <td align="left" valign="top">
             <select name="csvencoding">
                 <option value="UTF-16">UTF-16</option>
@@ -224,26 +236,26 @@ echo $OUTPUT->box_start()
     </tr>
 </table>
 </form>
-<?php 
+<?php
 echo $OUTPUT->box_end();
 print_footer($course);
 exit;
 }
-/********************************************* csv generator : generate **********************************/
-if ($action == 'downloadcsv'){
-    
-    $ENDLINES = array( 'LF' => "\n", 'CRLF' => "\r\n", 'CR' => "\r");
-    $csvrecordseparator = $ENDLINES[required_param('csvrecordseparator', PARAM_TEXT)];
+// csv generator : generate
+if ($action == 'downloadcsv') {
+
+    $endlines = array( 'LF' => "\n", 'CRLF' => "\r\n", 'CR' => "\r");
+    $csvrecordseparator = $endlines[required_param('csvrecordseparator', PARAM_TEXT)];
     $csvfieldseparator = required_param('csvfieldseparator', PARAM_TEXT);
-    if ($csvfieldseparator == 'TAB'){
+    if ($csvfieldseparator == 'TAB') {
         $csvfieldseparator = "  ";
     }
     $csvencoding = required_param('csvencoding', PARAM_CLEAN);
-    
-    /// sending headers
+
+    // sending headers
     header("Content-Type:text/csv\n\n");
-    
-    /// Prepare data
+
+    // Prepare data
     $sql = "
         SELECT DISTINCT
         u.id,
@@ -261,28 +273,28 @@ if ($action == 'downloadcsv'){
     $teachers = $DB->get_records_sql($sql, array($scheduler->id));
     $stream = '';
     $slots = $DB->get_records('scheduler_slots', array('schedulerid' => $scheduler->id), 'starttime', 'id, starttime, duration, exclusivity, teacherid, hideuntil');
-    if ($subaction == 'slots'){
-        /// Making title line
+    if ($subaction == 'slots') {
+        // Making title line
         $stream .= get_string('date', 'scheduler') . $csvfieldseparator;
         $stream .= get_string('starttime', 'scheduler') . $csvfieldseparator;
         $stream .= get_string('endtime', 'scheduler') . $csvfieldseparator;
         $stream .= get_string('slottype', 'scheduler') . $csvfieldseparator;
         $stream .= get_string('students', 'scheduler') .$csvrecordseparator;
-        
-        /// Print all the lines of data.
+
+        // Print all the lines of data.
         if (!empty($slots)) {
             foreach ($slots as $slot) {
                 $appointments = $DB->get_records('scheduler_appointment', array('slotid'=>$slot->id));
-                
-                /// fill slot data
-                $datestart = scheduler_userdate($slot->starttime,1);
-                $timestart = scheduler_usertime($slot->starttime,1);
-                $timeend = scheduler_usertime($slot->starttime + $slot->duration * 60,1);
+
+                // fill slot data
+                $datestart = scheduler_userdate($slot->starttime, 1);
+                $timestart = scheduler_usertime($slot->starttime, 1);
+                $timeend = scheduler_usertime($slot->starttime + $slot->duration * 60, 1);
                 $stream .= $datestart . $csvfieldseparator;
                 $stream .= $timestart . $csvfieldseparator;
                 $stream .= $timeend . $csvfieldseparator;
                 switch($slot->exclusivity){
-                    case 0 : 
+                    case 0 :
                         $stream .= get_string('unlimited', 'scheduler') . $csvfieldseparator;
                         break;
                     case 1 :
@@ -293,7 +305,7 @@ if ($action == 'downloadcsv'){
                 }
                 if (!empty($appointments)) {
                     $appointedlist = '';
-                    foreach($appointments as $appointment){
+                    foreach ($appointments as $appointment) {
                         $user = $DB->get_record('user', array('id' => $appointment->studentid), 'id,firstname,lastname');
                         $user->lastname = strtoupper($user->lastname);
                         $strattended = ($appointment->attended) ? ' (A) ': '';
@@ -303,8 +315,7 @@ if ($action == 'downloadcsv'){
                 }
             }
         }
-    }
-    else if ($subaction == 'grades'){
+    } else if ($subaction == 'grades') {
         $sql = "
             SELECT
             a.id,
@@ -328,20 +339,19 @@ if ($action == 'downloadcsv'){
             s.teacherid
             ";
         $grades = $DB->get_records_sql($sql, array($scheduler->id));
-        foreach($grades as $grade){
-            if ($scheduler->scale > 0){ // numeric scales
+        foreach ($grades as $grade) {
+            if ($scheduler->scale > 0) { // numeric scales
                 $finals[$grade->studentid]->sum = @$finals[$grade->studentid]->sum + $grade->grade;
                 $finals[$grade->studentid]->count = @$finals[$grade->studentid]->count + 1;
-                $finals[$grade->studentid]->max = (@$finals[$grade->studentid]->max < $grade->grade) ? $grade->grade : @$finals[$studentid]->max ;
-            }
-            else if ($scheduler->scale < 0){ // non numeric scales
+                $finals[$grade->studentid]->max = (@$finals[$grade->studentid]->max < $grade->grade) ? $grade->grade : @$finals[$studentid]->max;
+            } else if ($scheduler->scale < 0) { // non numeric scales
                 $scaleid = - ($scheduler->scale);
                 if ($scale = $DB->get_record('scale', 'id', $scaleid)) {
                     $scalegrades = make_menu_from_list($scale->scale);
-                    foreach ($grades as $aGrade) {
-                        $finals[$aGrade->studentid]->sum = @$finals[$aGrade->studentid]->sum + $scalegrades[$aGgrade->grade];
-                        $finals[$aGrade->studentid]->count = @$finals[$aGrade->studentid]->count + 1;
-                        $finals[$aGrade->studentid]->max = (@$finals[$aGrade->studentid]->max < $aGrade) ? $scalegrades[$aGgrade->grade] : @$finals[$aGrade->studentid]->max ;
+                    foreach ($grades as $agrade) {
+                        $finals[$agrade->studentid]->sum = @$finals[$agrade->studentid]->sum + $scalegrades[$aggrade->grade];
+                        $finals[$agrade->studentid]->count = @$finals[$agrade->studentid]->count + 1;
+                        $finals[$agrade->studentid]->max = (@$finals[$agrade->studentid]->max < $agrade) ? $scalegrades[$aggrade->grade] : @$finals[$agrade->studentid]->max;
                     }
                 }
             }
@@ -349,51 +359,51 @@ if ($action == 'downloadcsv'){
             $finals[$grade->studentid]->firstname = $grade->firstname;
             $finals[$grade->studentid]->appointmentnote = @$finals[$grade->studentid]->appointmentnote.' | '.$grade->appointmentnote;
         }
-        /// Making title line
+        // Making title line
         $stream .= get_string('student', 'scheduler') . $csvfieldseparator;
         $stream .= get_string('grades') . $csvfieldseparator;
         $stream .= get_string('finalgrade', 'scheduler') . $csvfieldseparator;
         $stream .= get_string('notes', 'scheduler') . $csvrecordseparator;
-        
-        if ($finals){
-            foreach($finals as $studentid => $final){
-                $stream .= fullname($final) . $csvfieldseparator; 
-                $stream .= $final->count . $csvfieldseparator; 
-                if ($scheduler->gradingstrategy == MEAN_GRADE){
+
+        if ($finals) {
+            foreach ($finals as $studentid => $final) {
+                $stream .= fullname($final) . $csvfieldseparator;
+                $stream .= $final->count . $csvfieldseparator;
+                if ($scheduler->gradingstrategy == MEAN_GRADE) {
                     $stream .= $final->sum / $final->count . $csvfieldseparator;
-                }
-                else{
+                } else {
                     $stream .= $final->max . $csvfieldseparator;
                 }
-                $stream .= strtr($final->appointmentnote, "\r\n", "  ") . $csvrecordseparator; 
+                $stream .= strtr($final->appointmentnote, "\r\n", "  ") . $csvrecordseparator;
             }
         }
     }
-    
-    echo mb_convert_encoding($stream, $csvencoding, 'UTF-8');
-    exit;    
-}
 
-/*********************************************** download selection **********************************/
-else{
+    echo mb_convert_encoding($stream, $csvencoding, 'UTF-8');
+    exit;
+
+} else {
+    // download selection
     $strdownloadexcelsingle = get_string('strdownloadexcelsingle', 'scheduler');
     $strdownloadexcelteachers = get_string('strdownloadexcelteachers', 'scheduler', format_string(scheduler_get_teacher_name($scheduler)));
     $strdownloadodssingle = get_string('strdownloadodssingle', 'scheduler');
     $strdownloadodsteachers = get_string('strdownloadodsteachers', 'scheduler', format_string(scheduler_get_teacher_name($scheduler)));
     $strdownloadcsvslots = get_string('strdownloadcsvslots', 'scheduler');
     $strdownloadcsvgrades = get_string('strdownloadcsvgrades', 'scheduler');
-    ?>
+?>
 <center>
-<?php echo $OUTPUT->heading(get_string('downloads', 'scheduler')) ?>
-<hr/ width="60%" class="separator">
+<?php
+echo $OUTPUT->heading(get_string('downloads', 'scheduler'))
+?>
+<hr width="60%" class="separator" />
 <table>
     <tr>
         <td>
             <form action="view.php" method="post" name="deleteallform" target="_blank">
                 <input type="hidden" name="what" value="downloadexcel" />
                 <input type="hidden" name="subaction" value="singlesheet" />
-                <input type="hidden" name="id" value="<?php p($cm->id) ?>" />
-                <input type="submit" name="go_btn" value="<?php echo $strdownloadexcelsingle ?>" style="width:240px"/>
+                <input type="hidden" name="id" value="<?php p($cm->id); ?>" />
+                <input type="submit" name="go_btn" value="<?php echo $strdownloadexcelsingle; ?>" style="width:240px"/>
             </form>
         </td>
     </tr>
@@ -402,8 +412,8 @@ else{
             <form action="view.php" method="post" name="deleteallform" target="_blank">
                 <input type="hidden" name="what" value="downloadexcel" />
                 <input type="hidden" name="subaction" value="byteacher" />
-                <input type="hidden" name="id" value="<?php p($cm->id) ?>" />
-                <input type="submit" name="go_btn" value="<?php echo $strdownloadexcelteachers ?>" style="width:240px"/>
+                <input type="hidden" name="id" value="<?php p($cm->id); ?>" />
+                <input type="submit" name="go_btn" value="<?php echo $strdownloadexcelteachers; ?>" style="width:240px"/>
             </form>
         </td>
     </tr>
@@ -412,8 +422,8 @@ else{
             <form action="view.php" method="post" name="deleteallform" target="_blank">
                 <input type="hidden" name="what" value="downloadods" />
                 <input type="hidden" name="subaction" value="singlesheet" />
-                <input type="hidden" name="id" value="<?php p($cm->id) ?>" />
-                <input type="submit" name="go_btn" value="<?php echo $strdownloadodssingle ?>" style="width:240px"/>
+                <input type="hidden" name="id" value="<?php p($cm->id); ?>" />
+                <input type="submit" name="go_btn" value="<?php echo $strdownloadodssingle; ?>" style="width:240px" />
             </form>
         </td>
     </tr>
@@ -422,8 +432,8 @@ else{
             <form action="view.php" method="post" name="deleteallform" target="_blank">
                 <input type="hidden" name="what" value="downloadods" />
                 <input type="hidden" name="subaction" value="byteacher" />
-                <input type="hidden" name="id" value="<?php p($cm->id) ?>" />
-                <input type="submit" name="go_btn" value="<?php echo $strdownloadodsteachers ?>" style="width:240px"/>
+                <input type="hidden" name="id" value="<?php p($cm->id); ?>" />
+                <input type="submit" name="go_btn" value="<?php echo $strdownloadodsteachers; ?>" style="width:240px" />
             </form>
         </td>
     </tr>
@@ -432,34 +442,33 @@ else{
             <form action="view.php" method="post" name="deleteallform">
                 <input type="hidden" name="what" value="dodownloadcsv" />
                 <input type="hidden" name="subaction" value="slots" />
-                <input type="hidden" name="id" value="<?php p($cm->id) ?>" />
-                <input type="submit" name="go_btn" value="<?php echo $strdownloadcsvslots ?>" style="width:240px"/>
+                <input type="hidden" name="id" value="<?php p($cm->id); ?>" />
+                <input type="submit" name="go_btn" value="<?php echo $strdownloadcsvslots; ?>" style="width:240px" />
             </form>
         </td>
     </tr>
 <?php
-if ($scheduler->scale != 0){
-    ?>
+    if ($scheduler->scale != 0) {
+?>
     <tr>
         <td>
             <form action="view.php" method="post" name="deleteallform">
                 <input type="hidden" name="what" value="dodownloadcsv" />
                 <input type="hidden" name="subaction" value="grades" />
-                <input type="hidden" name="id" value="<?php p($cm->id) ?>" />
-                <input type="submit" name="go_btn" value="<?php echo $strdownloadcsvgrades ?>" style="width:240px"/>
+                <input type="hidden" name="id" value="<?php p($cm->id); ?>" />
+                <input type="submit" name="go_btn" value="<?php echo $strdownloadcsvgrades; ?>" style="width:240px" />
             </form>
         </td>
     </tr>
     <tr>
         <td>
-            <br/><?php print_string('exportinstructions','scheduler') ?>
+            <br/><?php print_string('exportinstructions', 'scheduler'); ?>
         </td>
     </tr>
 <?php
-}
+    }
 ?>
 </table>
 </center>
 <?php
 }
-?>

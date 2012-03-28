@@ -1,9 +1,23 @@
-<?PHP 
+<?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * Main file of the scheduler package.
  * It lists all the instances of scheduler in a particular course.
- * 
+ *
  * @package    mod
  * @subpackage scheduler
  * @copyright  2011 Henning Bostelmann and others (see README.txt)
@@ -26,25 +40,25 @@ require_login($course->id);
 
 add_to_log($course->id, 'scheduler', 'view all', "index.php?id=$course->id", '');
 
-/// Get all required strings
+// Get all required strings
 
 $strschedulers = get_string('modulenameplural', 'scheduler');
 $strscheduler  = get_string('modulename', 'scheduler');
 
-/// Print the header
+// Print the header
 
 $navlinks = array();
-$navlinks[] = array('name' => $strscheduler, 'link' => '', 'type' => 'title');    
+$navlinks[] = array('name' => $strscheduler, 'link' => '', 'type' => 'title');
 $navigation = build_navigation($navlinks);
 print_header_simple($strschedulers, '', $navigation, '', '', true, '', navmenu($course));
 
-/// Get all the appropriate data
+// Get all the appropriate data
 
 if (!$schedulers = get_all_instances_in_course('scheduler', $course)) {
     print_error('noschedulers', 'scheduler', "../../course/view.php?id=$course->id");
 }
 
-/// Print the list of instances 
+// Print the list of instances
 
 $timenow = time();
 $strname  = get_string('name');
@@ -66,10 +80,10 @@ if ($course->format == 'weeks') {
 
 foreach ($schedulers as $scheduler) {
     if (!$scheduler->visible) {
-        //Show dimmed if the mod is hidden
+        // Show dimmed if the mod is hidden
         $link = "<a class=\"dimmed\" href=\"view.php?id={$scheduler->coursemodule}\">$scheduler->name</a>";
     } else {
-        //Show normal if the mod is visible
+        // Show normal if the mod is visible
         $link = "<a href=\"view.php?id={$scheduler->coursemodule}\">$scheduler->name</a>";
     }
     if ($scheduler->visible or has_capability('moodle/course:viewhiddenactivities', $context)) {
@@ -83,8 +97,6 @@ foreach ($schedulers as $scheduler) {
 
 echo html_writer::table($table);
 
-/// Finish the page
+// Finish the page
 
 echo $OUTPUT->footer($course);
-
-?>

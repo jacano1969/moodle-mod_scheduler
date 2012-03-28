@@ -1,4 +1,18 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * @package    mod
@@ -6,8 +20,7 @@
  * @copyright  2011 Henning Bostelmann and others (see README.txt)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
- 
- 
+
 /**
  * Define all the restore steps that will be used by the restore_scheduler_activity_task
  */
@@ -72,7 +85,7 @@ class restore_scheduler_activity_structure_step extends restore_activity_structu
         $data->teacherid = $this->get_mappingid('user', $data->teacherid);
 
         $newitemid = $DB->insert_record('scheduler_slots', $data);
-        $this->set_mapping('scheduler_slot', $oldid, $newitemid, true); 
+        $this->set_mapping('scheduler_slot', $oldid, $newitemid, true);
         // Apply only once we have files in the slot
     }
 
@@ -83,14 +96,14 @@ class restore_scheduler_activity_structure_step extends restore_activity_structu
         $oldid = $data->id;
 
         $data->slotid = $this->get_new_parentid('scheduler_slot');
-        
+
         $data->timecreated = $this->apply_date_offset($data->timecreated);
         $data->timemodified = $this->apply_date_offset($data->timemodified);
 
         $data->studentid = $this->get_mappingid('user', $data->studentid);
 
         $newitemid = $DB->insert_record('scheduler_appointment', $data);
-        // $this->set_mapping('scheduler_appointments', $oldid, $newitemid, true); 
+        // $this->set_mapping('scheduler_appointments', $oldid, $newitemid, true);
         // Apply only once we have files in the appointment
     }
 

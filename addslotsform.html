@@ -5,7 +5,7 @@
 <input type="hidden" name="what" value="doaddsession" />
 <input type="hidden" name="id" value="<?php p($cm->id) ?>" />
 <input type="hidden" name="page" value="<?php p($page) ?>" />
-<?php 
+<?php
 if (!has_capability('mod/scheduler:canscheduletootherteachers', $context)){
 ?>
 <input type="hidden" name="teacherid" value="<?php p($form->teacherid) ?>" />
@@ -17,7 +17,7 @@ if (!has_capability('mod/scheduler:canscheduletootherteachers', $context)){
     <tr>
         <td align="right"><b><?php print_string('date', 'scheduler') ?>:</b></td>
         <td align="left" <?php print_error_class(@$errors, 'rangestart,range') ?> >
-            <?php  
+            <?php
                 echo html_writer::select_time('days', 'startday', $form->rangestart);
                 echo html_writer::select_time('months', 'startmonth', $form->rangestart);
                 echo html_writer::select_time('years', 'startyear', $form->rangestart);
@@ -27,7 +27,7 @@ if (!has_capability('mod/scheduler:canscheduletootherteachers', $context)){
     <tr valign="top">
         <td align="right"><b><?php print_string('enddate', 'scheduler') ?>:</b></td>
         <td align="left" <?php print_error_class(@$errors, 'rangeend,range') ?> >
-            <?php  
+            <?php
                 echo html_writer::select_time('days', 'endday', $form->rangeend);
                 echo html_writer::select_time('months', 'endmonth', $form->rangeend);
                 echo html_writer::select_time('years', 'endyear', $form->rangeend);
@@ -38,19 +38,26 @@ if (!has_capability('mod/scheduler:canscheduletootherteachers', $context)){
     <tr valign="top">
         <td align="right"><b><?php print_string('addondays', 'scheduler') ?>:</b></td>
         <td align="left" <?php print_error_class(@$errors, 'days,range') ?> >
-            <input type="checkbox" <?php echo ($form->monday) ? 'checked="checked"' : '' ; ?> name="monday" value="1" /> <?php print_string('monday', 'scheduler') ; ?><br>
-            <input type="checkbox" <?php echo ($form->tuesday) ? 'checked="checked"' : '' ; ?> name="tuesday" value="1" /> <?php print_string('tuesday', 'scheduler');  ?><br>
-            <input type="checkbox" <?php echo ($form->wednesday) ? 'checked="checked"' : '' ; ?> name="wednesday" value="1" /> <?php print_string('wednesday', 'scheduler');  ?><br>
-            <input type="checkbox" <?php echo ($form->thursday) ? 'checked="checked"' : '' ; ?> name="thursday" value="1" /> <?php print_string('thursday', 'scheduler')  ?><br>
-            <input type="checkbox" <?php echo ($form->friday) ? 'checked="checked"' : '' ; ?> name="friday" value="1" /> <?php print_string('friday', 'scheduler')  ?><br>
-            <input type="checkbox" <?php echo ($form->saturday) ? 'checked="checked"' : '' ; ?> name="saturday" value="1" /> <?php print_string('saturday', 'scheduler')  ?><br>
-            <input type="checkbox" <?php echo ($form->sunday) ? 'checked="checked"' : '' ; ?> name="sunday" value="1" /> <?php print_string('sunday', 'scheduler')  ?>
+            <input type="checkbox" <?php echo ($form->monday) ? 'checked="checked"' : '' ; ?> name="monday" value="1" />
+            <?php print_string('monday', 'scheduler') ; ?><br>
+            <input type="checkbox" <?php echo ($form->tuesday) ? 'checked="checked"' : '' ; ?> name="tuesday" value="1" />
+            <?php print_string('tuesday', 'scheduler');  ?><br>
+            <input type="checkbox" <?php echo ($form->wednesday) ? 'checked="checked"' : '' ; ?> name="wednesday" value="1" />
+            <?php print_string('wednesday', 'scheduler');  ?><br>
+            <input type="checkbox" <?php echo ($form->thursday) ? 'checked="checked"' : '' ; ?> name="thursday" value="1" />
+            <?php print_string('thursday', 'scheduler')  ?><br>
+            <input type="checkbox" <?php echo ($form->friday) ? 'checked="checked"' : '' ; ?> name="friday" value="1" />
+            <?php print_string('friday', 'scheduler')  ?><br>
+            <input type="checkbox" <?php echo ($form->saturday) ? 'checked="checked"' : '' ; ?> name="saturday" value="1" />
+            <?php print_string('saturday', 'scheduler')  ?><br>
+            <input type="checkbox" <?php echo ($form->sunday) ? 'checked="checked"' : '' ; ?> name="sunday" value="1" />
+            <?php print_string('sunday', 'scheduler')  ?>
         </td>
     </tr>
     <tr valign="top">
         <td align="right"><b><?php print_string('starttime', 'scheduler') ?>:</b></td>
         <td align="left">
-            <?php 
+            <?php
                echo html_writer::select_time('hours', 'starthour', $form->timestart);
                echo html_writer::select_time('minutes', 'startminute', $form->timestart);
             ?>
@@ -59,7 +66,7 @@ if (!has_capability('mod/scheduler:canscheduletootherteachers', $context)){
     <tr valign="top">
         <td align="right"><b><?php print_string('endtime', 'scheduler') ?>:</b></td>
         <td align="left">
-            <?php  
+            <?php
                echo html_writer::select_time('hours', 'endhour', $form->timeend);
                echo html_writer::select_time('minutes', 'endminute', $form->timeend);
             ?>
@@ -98,7 +105,7 @@ if (has_capability('mod/scheduler:canscheduletootherteachers', $context)){
                 } else {
                    print_string('noteachershere', 'scheduler', s(scheduler_get_teacher_name($scheduler)));
                 }
-                echo $OUTPUT->help_icon('bookwithteacher', 'scheduler'); 
+                echo $OUTPUT->help_icon('bookwithteacher', 'scheduler');
             ?>
         </td>
     </tr>
@@ -117,7 +124,7 @@ if (has_capability('mod/scheduler:canscheduletootherteachers', $context)){
     <tr valign="top">
         <td align="right"><b><?php print_string('duration', 'scheduler') ?>:</b></td>
         <td align="left">
-            <input type="text" size="3" maxlength="3" name="duration" value="<?php echo $form->duration ?>" />
+            <input type="text" size="3" maxlength="3" name="duration" value="<?php echo $form->duration; ?>" />
             <?php print_string('minutesperslot', 'scheduler') ?>
         </td>
     </tr>
@@ -151,15 +158,15 @@ if (has_capability('mod/scheduler:canscheduletootherteachers', $context)){
 <?php
 for ($i = 2; $i < 7; $i++){
 ?>
-                <option value="<?php echo (86400*$i); ?>"><?php echo $i; print_string('xdaysbefore', 'scheduler') ?></option>
+                <option value="<?php echo (86400*$i); ?>"><?php echo $i; print_string('xdaysbefore', 'scheduler'); ?></option>
 <?php
 }
 ?>
-                <option value="<?php echo (86400*7); ?>"><?php  print_string('oneweekbefore', 'scheduler') ?></option>
+                <option value="<?php echo (86400*7); ?>"><?php print_string('oneweekbefore', 'scheduler'); ?></option>
 <?php
 for ($i = 2; $i < 7; $i++){
 ?>
-                <option value="<?php echo (86400*$i*7); ?>"><?php echo $i; print_string('xweeksbefore', 'scheduler') ?></option>
+                <option value="<?php echo (86400*$i*7); ?>"><?php echo $i; print_string('xweeksbefore', 'scheduler'); ?></option>
 <?php
 }
 ?>
@@ -176,15 +183,15 @@ for ($i = 2; $i < 7; $i++){
 <?php
 for ($i = 2; $i < 7; $i++){
 ?>
-                <option value="<?php echo (DAYSECS * $i); ?>"><?php echo $i; print_string('xdaysbefore', 'scheduler') ?></option>
+                <option value="<?php echo (DAYSECS * $i); ?>"><?php echo $i; print_string('xdaysbefore', 'scheduler'); ?></option>
 <?php
 }
 ?>
-                <option value="<?php echo (DAYSECS * 7); ?>"><?php  print_string('oneweekbefore', 'scheduler') ?></option>
+                <option value="<?php echo (DAYSECS * 7); ?>"><?php  print_string('oneweekbefore', 'scheduler'); ?></option>
 <?php
 for ($i = 2; $i < 7; $i++){
 ?>
-                <option value="<?php echo (DAYSECS * $i * 7); ?>"><?php echo $i; print_string('xweeksbefore', 'scheduler') ?></option>
+                <option value="<?php echo (DAYSECS * $i * 7); ?>"><?php echo $i; print_string('xweeksbefore', 'scheduler'); ?></option>
 <?php
 }
 ?>

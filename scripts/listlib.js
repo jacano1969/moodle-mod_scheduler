@@ -1,13 +1,14 @@
 /**
-* This library is intended to simplify client mechanics writing.
-*
-* It will encompass many little developement tricks such as text list management, ...
-**/
+ * This library is intended to simplify client mechanics writing.
+ *
+ * It will encompass many little developement tricks such as text list management, ...
+ */
 
-/*
-* adds a value to a comma separated list, ensuring value is unique. The list is the value content of the 
-* provided text. The function returns the modified list. The list does not care about value ordering.
-*/
+/**
+ * adds a value to a comma separated list, ensuring value is unique. The list is the value content of the
+ * provided text. The function returns the modified list. The list does not care about value ordering.
+ */
+
 function addToList(textlist, value)
 {
    unescaped_value = value;

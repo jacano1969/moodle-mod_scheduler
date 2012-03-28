@@ -10,7 +10,7 @@ $usehtmleditor = can_use_html_editor();
 <input type="hidden" name="id" value="<?php p($cm->id) ?>" />
 <input type="hidden" name="page" value="<?php p($page) ?>" />
 <input type="hidden" name="offset" value="<?php p($offset) ?>" />
-<?php 
+<?php
 if ($form->what == 'updateslot' || $form->what == 'schedule'){
 ?>
 <input type="hidden" name="slotid" value="<?php p($form->slotid) ?>" />
@@ -35,30 +35,34 @@ if ($form->what == 'updateslot' || $form->what == 'schedule'){
     <td align="left">
 <?php
         $students = scheduler_get_possible_attendees($cm, $usergroups);
-        if ($students){
+        if ($students) {
             $studentsmenu = array();
             foreach ($students as $aStudent) {
-                if ($scheduler->schedulermode == 'oneonly' AND scheduler_has_slot($aStudent->id, $scheduler, true, false, $form->slotid)) continue;
-                if ($scheduler->schedulermode == 'onetime' AND scheduler_has_slot($aStudent->id, $scheduler, true, true, $form->slotid)) continue;
-                if ($form->appointments and $subaction == 'addappointed'){
-                    if (in_array($aStudent->id, array_keys($form->appointments))) continue; // is already added 
+                if ($scheduler->schedulermode == 'oneonly' AND scheduler_has_slot($aStudent->id, $scheduler, true, false, $form->slotid)) {
+                    continue;
+                }
+                if ($scheduler->schedulermode == 'onetime' AND scheduler_has_slot($aStudent->id, $scheduler, true, true, $form->slotid)) {
+                    continue;
+                }
+                if ($form->appointments and $subaction == 'addappointed') {
+                    if (in_array($aStudent->id, array_keys($form->appointments))) {
+                        continue; // is already added
+                    }
                 }
                 $studentsmenu[$aStudent->id] = fullname($aStudent);
             }
-            if (!empty($studentsmenu)){
+            if (!empty($studentsmenu)) {
                 echo html_writer::select($studentsmenu, 'studenttoadd', $form->studentid);
-                if ($action == 'update'){
+                if ($action == 'update') {
                     $addstudenttogroupstr = get_string('addstudenttogroup', 'scheduler');
                     echo "&nbsp;<input type=\"button\" value=\"{$addstudenttogroupstr}\" onclick=\"addToGroup()\" />";
                     echo $OUTPUT->help_icon('addscheduled', get_string('addscheduled', 'scheduler'), 'scheduler');
                 }
+            } else {
+                print_string('nostudenttobook', 'scheduler');
             }
-            else{
-                print_string('nostudenttobook', 'scheduler');            
-            }
-        }
-        else{
-           print_string('nostudenttobook', 'scheduler');            
+        } else {
+           print_string('nostudenttobook', 'scheduler');
         }
 ?>
     </td>
@@ -66,9 +70,9 @@ if ($form->what == 'updateslot' || $form->what == 'schedule'){
 <tr valign="top">
     <td align="right"><b><?php print_string('seen', 'scheduler') ?>:</b></td>
     <td align="left">
-        <input type="radio" name="attended" value="1" <?php if ($form->attended == 1){ echo 'checked';} ?> />
+        <input type="radio" name="attended" value="1" <?php if ($form->attended == 1) { echo 'checked'; } ?> />
         <?php print_string('yes') ?>
-        <input type="radio" name="attended" value="0" <?php if ($form->attended == 0){ echo 'checked';} ?> />
+        <input type="radio" name="attended" value="0" <?php if ($form->attended == 0) { echo 'checked'; } ?> />
         <?php print_string('no') ?>
     </td>
 </tr>
@@ -82,8 +86,7 @@ if ($form->what == 'updateslot' || $form->what == 'schedule'){
             print_textarea($usehtmleditor, 20, 60, 680, 400, 'appointmentnote', $form->appointmentnote);
             if ($usehtmleditor) {
                 echo '<input type="hidden" name="appointmentformat" value="'.FORMAT_HTML.'" />';
-            } 
-            else {
+            } else {
                 echo '<p align="right">';
                 echo $OUTPUT->help_icon('textformat', get_string('formattexttype'));
                 print_string('formattexttype');
@@ -91,17 +94,17 @@ if ($form->what == 'updateslot' || $form->what == 'schedule'){
                 if (empty($form->appointmentformat)) {
                     $form->appointmentformat = "MOODLE";
                 }
-                echo html_writer::select(format_text_menu(), 'appointmentformat', $form->appointmentformat, ""); 
+                echo html_writer::select(format_text_menu(), 'appointmentformat', $form->appointmentformat, "");
                 echo '</p>';
             }
         ?>
     </td>
 </tr>
 <?php
-if ($scheduler->scale != 0){
+if ($scheduler->scale != 0) {
 ?>
 <tr>
-    <td align="right"><b><?php print_string('grade') ?>:</b></td>
+    <td align="right"><b><?php print_string('grade'); ?>:</b></td>
     <td align="left">
         <?php echo scheduler_make_grading_menu($scheduler, 'grade', $form->grade, false); ?>
     </td>
@@ -111,7 +114,7 @@ if ($scheduler->scale != 0){
 $onsubmitcall = ($usehtmleditor) ? "javascript:document.forms['appoint'].submit();" : '' ;
 ?>
 </table>
-<input type="button" value="<?php  print_string('confirm') ?>" onclick="<?php echo $onsubmitcall ?>document.forms['appoint'].submit();" />
-<input type="button" value="<?php  print_string('cancel') ?>" onclick="document.forms['appoint'].subaction.value = 'cancel'; document.forms['appoint'].submit();" />
+<input type="button" value="<?php print_string('confirm'); ?>" onclick="<?php echo $onsubmitcall ?>document.forms['appoint'].submit();" />
+<input type="button" value="<?php print_string('cancel'); ?>" onclick="document.forms['appoint'].subaction.value = 'cancel'; document.forms['appoint'].submit();" />
 </center>
 </form>

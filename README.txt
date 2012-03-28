@@ -15,9 +15,9 @@ http://www.gnu.org/copyleft/gpl.html
 
 === Description ===
 
-The Scheduler module helps you to schedule appointments with your students. 
+The Scheduler module helps you to schedule appointments with your students.
 Teachers specify time slots for meetings, students then choose one of them on Moodle.
-Teacher in turn can record the outcome of the meeting - and optionally a grade - 
+Teacher in turn can record the outcome of the meeting - and optionally a grade -
 within the scheduler.
 
 For further information, please see:
@@ -50,15 +50,15 @@ Based on previous work by:
 
 With further contributions taken from:
 
-* Vivek Arora (independent migration of the module to 2.0) 
+* Vivek Arora (independent migration of the module to 2.0)
 * Various authors of the core Moodle code
 
 
 === Release notes ===
 
---- Version 2.0 --- 
+--- Version 2.0 ---
 
-No major functional changes over 1.9; bug fixes and API migration only. Requires 1.9 for database upgrades.  
+No major functional changes over 1.9; bug fixes and API migration only. Requires 1.9 for database upgrades.
 
 
 === Technical notes ===
@@ -69,8 +69,7 @@ that is, malfunction in this respect should be considered a bug:
 
 * Gradebook integration
 * Moodle 2 backup
-* New rich text editor and file API (activity intro only) 
+* New rich text editor and file API (activity intro only)
 * Localization / language packs
 
 The module does not use any deprecated API as of Moodle 2.1.
-
